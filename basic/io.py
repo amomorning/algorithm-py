@@ -32,12 +32,14 @@ np.array(input().split(),np.int64))
 n = int(input())
 a = list(map(int, input().split()))
 
+
 # 可以使用逗号分隔读入两个变量
 # N K
 # A1 A2 … AN
 #
 n, k = map(int, input().split())
 a = list(map(int, input().split()))
+
 
 # 使用read(0)可以无视换行
 # stdin
@@ -50,14 +52,14 @@ n, k, *a = map(int,open('test.in').read().split())
 # 在大量换行输入的情况下用 sys.stdin.readline
 import sys
 input = sys.stdin.readline
-
+#
 # H W
 # S1
 # ⋮
 # SH
 h, w = map(int, input().split())
 s = [input() for _ in range(h)]
-
+#
 # N
 # t1 x1 y1
 # t2 x2 y2
