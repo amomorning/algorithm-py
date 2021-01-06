@@ -207,6 +207,12 @@
 
     # 访问不存在的键会导致KeyError
     filled_dict["four"]   # KeyError
+    # 利用 KeyError 输入
+    if j % 2 == 1:
+        try: 
+            d[int(raw[j])] += float(raw[j+1])
+        except KeyError:
+            d[int(raw[j])] = float(raw[j+1])
 
     # 用get来避免KeyError
     filled_dict.get("one")   # => 1
