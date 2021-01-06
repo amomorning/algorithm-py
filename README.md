@@ -1,7 +1,7 @@
 ## algorithm_py
 Algorithm template for online contests, available on  
 - [Codeforces](https://codeforces.com/)(Python 3.7.2) 
-- [Atcoder](https://atcoder.jp/)(Python 3.4.3)
+- [Atcoder](https://atcoder.jp/)(Python 3.8.2)
 
 ### basic usage
 - basic

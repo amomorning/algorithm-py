@@ -1,3 +1,5 @@
-import numpy as np
+import math
 
-x = np.rand(10000)
+print(math.comb(5, 2))
+
+print('{:,}'.format(1.232))
