@@ -12,16 +12,14 @@ Algorithm template for online contests, available on
 - [regular expressions](https://github.com/amomorning/algorithm-py/blob/master/basic/use_re.py)
 
 ### algorithm template
-#### sort and search
-- Quick Sort
-- Binary Search
-
-#### [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
-- Segment Tree
-- Sparse Table
-
-#### graph
-- dijkstra
+- sort and search
+    - Quick Sort
+    - Binary Search
+- [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
+    - Segment Tree
+    - Sparse Table
+- graph
+    - dijkstra
 
 
 ### errors and other notes
