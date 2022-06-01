@@ -4,10 +4,25 @@ Algorithm template for online contests, available on
 - [Atcoder](https://atcoder.jp/)(Python 3.8.2)
 
 ### basic usage
-- basic
-- input and output
-- itertools
+- [basic](https://github.com/amomorning/algorithm-py/blob/master/basic/basic.py)
+- [input and output](https://github.com/amomorning/algorithm-py/blob/master/basic/io.py)
+- [math and cmath](https://github.com/amomorning/algorithm-py/blob/master/basic/use_math.py)
+- [itertools](https://github.com/amomorning/algorithm-py/blob/master/basic/use_itertools.py)
+- [collections](https://github.com/amomorning/algorithm-py/blob/master/basic/use_collections.py)
+- [regular expressions](https://github.com/amomorning/algorithm-py/blob/master/basic/use_re.py)
 
 ### algorithm template
-- quick_sork
+#### sort and search
+- Quick Sort
+- Binary Search
+
+#### [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
+- Segment Tree
+- Sparse Table
+
+#### graph
 - dijkstra
+
+
+### errors and other notes
+- [pypy](https://github.com/amomorning/algorithm-py/blob/master/basic/use_pypy.py) notes
