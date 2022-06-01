@@ -21,7 +21,7 @@ float(input())
 map(int, input().split())
 # numpy
 import numpy as np
-np.array(input().split(),np.int64))
+np.array(input().split(),np.int64)
 
 
 # 输入形式

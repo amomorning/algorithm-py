@@ -1,3 +1,5 @@
+# Can not be used in current contest environment
+# 2022-06-01
 import numpy as np
 
 ################################

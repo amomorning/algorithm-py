@@ -16,3 +16,8 @@ merge_dict({'a': 1, 'b': 2}, {'c': 3})  # {'a': 1, 'b': 2, 'c': 3}
 # 按key排序
 dic = sorted(d.items(), key=lambda z: z[0], reverse=True)
 
+# 有序 map
+# TODO: implement c++ std::map
+
+# 有序 set
+# TODO: implement c++ std::set
