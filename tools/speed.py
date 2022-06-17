@@ -1,14 +1,33 @@
-import timeit
+import random
+n = 1000000
+a = []
+for i in range(n):
+    a.append(random.randint(0, i))
+     
 
+
+import timeit
 start = timeit.default_timer()
 # do something
-test = [[0x3f3f3f3f0 for i in range(1<<20)] for j in range(20)]
+
+
+st = set(range(n)) - set(a)
+    
+# elapsed time
 elapsed = (timeit.default_timer() - start)
 print(elapsed)
 
 start = timeit.default_timer()
 # do something
-import numpy as np
-test = np.full((1<<20, 20), 0x3f3f3f3f, dtype=np.int32)
+
+deg = [0] * n
+for x in a:
+    deg[x] += 1
+leaves = []
+for i in range(n):
+    if deg[i] == 0:
+        leaves.append(i)
+
+# elapsed time
 elapsed = (timeit.default_timer() - start)
 print(elapsed)

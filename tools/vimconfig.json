@@ -1,0 +1,52 @@
+{
+    "vim.overrideCopy": false,
+    "vim.useCtrlKeys": false,
+    "vim.normalModeKeyBindingsNonRecursive":[
+        {
+            "before": [":"],
+            "after": [";"]
+        },
+        {
+            "before": [";"],
+            "after": [":"]
+        }
+    ],
+    "vim.normalModeKeyBindings": [
+        {
+            "before": [ "<leader>", "w" ],
+            "commands": [
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "cd ${fileDirname}\nconda activate pypy3\n" }
+                }
+            ]
+        },
+        {
+            "before": [ "<leader>", "e" ],
+            "commands": [
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "python ${fileBasename}\n" }
+                }
+            ]
+        },
+        {
+            "before": [ "<leader>", "1" ],
+            "commands": [
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "pbpaste > ${fileBasenameNoExtension}.in\n" }
+                }
+            ]
+        },
+        {
+            "before": [ "<leader>", "q" ],
+            "commands": [
+                {
+                    "command": "workbench.action.terminal.sendSequence",
+                    "args": { "text": "python ${fileBasename} < ${fileBasenameNoExtension}.in\n" } 
+                }
+            ]
+        }
+    ]
+}
