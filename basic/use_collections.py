@@ -42,3 +42,7 @@ while q:
 from heapq import nlargest
 dic ={'d': 10, 'b': 8, 'c': 9, 'a': 10} 
 nlargest(3, dic, key = lambda k: dic[k])
+
+# 用 OrderedDict 去重
+a = [5, 2, 2, 1, 1, 3, 10, 4, 2]
+list(collections.OrderedDict.fromkeys(a))
