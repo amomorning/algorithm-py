@@ -31,7 +31,7 @@ Algorithm template for online contests, available on
 ### errors and other notes
 - [pypy](https://github.com/amomorning/algorithm-py/blob/master/basic/use_pypy.py) notes
 
-### basic skills
+### tricks
 
 #### Mock interactive problem
 <!-- TODO -->
