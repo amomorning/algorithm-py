@@ -1,3 +1,5 @@
+import collections
+
 def spfa(x, g, n):
     dis = [float('inf') for i in range(n)]
     dis[x] = 0
