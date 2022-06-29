@@ -14,6 +14,7 @@ Algorithm template for online contests, available on
 ### algorithm template
 - [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
     - Segment Tree
+    - Fenwick Tree
     - Sparse Table
     - Union Find
     - Encoded Dict

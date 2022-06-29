@@ -31,6 +31,33 @@ class SegmentTree:
             r >>= 1
         return x
  
+class Fenwick:
+    def __init__(self, n):
+        self.n = n
+        self.bits = [0] * n
+    
+    def ask(self, p, tot=0):
+        while p >= 0: tot += self.bits[p]; p -= ~p & p + 1
+        return tot
+    
+    def add(self, p, x):
+        while p < self.n: self.bits[p] += x; p += ~p & p + 1
+
+    ''' k in [1, n]
+    '''
+    def kth(self, k):
+        p, t = -1, 0
+        b = self.n.bit_length()
+        while ~b:
+            p += 1 << b
+            if p >= self.n or t + self.bits[p] >= k: 
+                p -= 1 << b
+            else:
+                t += self.bits[p]
+            b -= 1
+        return -1 if p+1 >= self.n else p + 1
+
+
 
 class SparseTable:
     def __init__(self, a, select=min):
