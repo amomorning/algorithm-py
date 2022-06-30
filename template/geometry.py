@@ -5,66 +5,44 @@ class Point:
     def __init__(self, *args):
         if len(args) == 1:
             args = args[0]
-        if len(args) == 2:
-            self.x, self.y = args
-            self.__d = 2
-        if len(args) == 3:
-            self.x, self.y, self.z = args
-            self.__d = 3
-        if len(args) == 4:
-            # Quaternion
-            self.x, self.y, self.z, self.w = args
-            self.__d = 4
+        self.__v = list(args)
         
     def __len__(self):
-        return self.__d
+        return len(self.__v)
 
     def __str__(self):
-        if self.__d == 4:
-            return str((self.x, self.y, self.z, self.w))
-        elif self.__d == 3:
-            return str((self.x, self.y, self.z))
-        else:
-            return str((self.x, self.y))
+        return ' '.join(map(str, self.__v))
     
     def __hash__(self):
-        if self.__d == 4:
-            return hash((self.x, self.y, self.z, self.w))
-        elif self.__d == 3:
-            return hash((self.x, self.y, self.z))
-        else:
-            return hash((self.x, self.y))
+        return hash(tuple(self.__v))
         
     def __getitem__(self, key):
-        if key == 'x' or key == 0:
-            return self.x
-        if key == 'y' or key == 1:
-            return self.y
-        if key == 'z' or key == 2:
-            return self.z
-        if key == 'w' or key == 3:
-            return self.w
+        if type(key) is int or slice:
+            return self.__v[key]
+        if key == 'x':
+            return self.__v[0]
+        if key == 'y':
+            return self.__v[1]
+        if key == 'z':
+            return self.__v[2]
+        if key == 'w':
+            return self.__v[3]
+
         raise KeyError('Invalid key: %s' % key)
     
     def __setitem__(self, key, value):
-        if key == 'x' or key == 0:
-            self.x = value
-        if key == 'y' or key == 1:
-            self.y = value
-        if key == 'z' or key == 2:
-            self.z = value
-        if key == 'w' or key == 3:
-            self.w = value
+        if type(key) is int and key < len(self.__v):
+            self.__v[key] = value
+        if key == 'x':
+            self.__v[0] = value
+        if key == 'y':
+            self.__v[1] = value
+        if key == 'z':
+            self.__v[2] = value
+        if key == 'w':
+            self.__v[3] = value        
         raise KeyError('Invalid key: %s' % key)
     
-    
-    def __iter__(self):
-        if self.__d == 4:
-            return iter((self.x, self.y, self.z, self.w))
-        elif self.__d == 3:
-            return iter((self.x, self.y, self.z))
-        else:
-            return iter((self.x, self.y))
         
     def __neg__(self):
         ret = []
@@ -157,12 +135,14 @@ class Point:
     
     def cross(self, rhs):
         if type(rhs) != Point: rhs = Point(rhs)
-        if self.__d == 3:
+        if len(self.__v) == 3:
             a, b, c = self
             x, y, z = rhs
             return Point(-c*y + b*z, c*x - a*z, -b*x + a*y)
-        elif self.__d == 2:
-            return self.x * rhs.y - self.y * rhs.x
+        elif len(self.__v) == 2:
+            a, b = self
+            x, y = rhs
+            return a * y - b * x
         raise ValueError("Invalid coordinates")
 
         
@@ -182,7 +162,7 @@ class Point:
         return self.conj() / l2
 
     def mulQ(self, rhs):
-        assert self.__d == 4
+        assert len(self.__v)  == 4
         if type(rhs) != Point: rhs = Point(rhs)
 
         q0, q1, q2, q3 = self
@@ -195,39 +175,36 @@ class Point:
 
     # rotate
     def rotate(self, angle):
-        assert self.__d == 2
+        assert len(self.__v) == 2
         c, s = math.cos(angle), math.sin(angle)
         x, y = self
         return Point(x * c - y * s, x * s + y * c)
         
     def rotate90(self):
-        assert self.__d == 2
-        return Point(-self.y, self.x)
+        assert len(self.__v) == 2
+        x, y = self
+        return Point(-y, x)
     
     def rotateX(self, angle):
-        if self.__d < 3: self.z = 0; self.__d = 3
-        assert self.__d == 3
+        assert len(self.__v)  == 3
         c, s = math.cos(angle), math.sin(angle)
         x, y, z = self
         return Point(x, y * c - z * s, y * s + z * c)
     
     def rotateY(self, angle):
-        if self.__d < 3: self.z = 0; self.__d = 3
-        assert self.__d == 3
+        assert len(self.__v)  == 3
         c, s = math.cos(angle), math.sin(angle)
         x, y, z = self
         return Point(x * c + z * s, y, -x * s + z * c)
 
     def rotateZ(self, angle):
-        if self.__d < 3: self.z = 0; self.__d = 3
-        assert self.__d == 3
+        assert len(self.__v)  == 3
         c, s = math.cos(angle), math.sin(angle)
         x, y, z = self
         return Point(x * c - y * s, x * s + y * c, z)
     
     def rotateBy(self, axis, angle):
-        if self.__d < 3: self.z = 0; self.__d = 3
-        assert self.__d == 3
+        assert len(self.__v)  == 3
         if type(axis) != Point: axis = Point(axis)
         
         c, s = math.cos(angle), math.sin(angle)
@@ -240,15 +217,15 @@ class Point:
 
 
     def rotateByQ(self, axis, angle): 
-        if self.__d < 3: self.z = 0; self.__d = 3
-        assert self.__d == 3
+        assert len(self.__v) == 3
         if type(axis) != Point: axis = Point(axis)
         
-        axis = axis.normalized() * math.sin(angle*0.5)
-        q = Point(math.cos(angle*0.5), axis.x, axis.y, axis.z)
-        p = Point(1.0, self.x, self.y, self.z)
-
-        return q.mulQ(p).mulQ(q.inv())
+        ax, ay, az = axis.normalized() * math.sin(angle*0.5)
+        x, y, z = self
+        
+        q = Point(math.cos(angle*0.5), ax, ay, az)
+        p = Point(1.0, x, y, z)
+        return Point(q.mulQ(p).mulQ(q.inv())[1:])
 
 
     def applyM(self, m):
@@ -266,9 +243,10 @@ class Point:
 if __name__ == '__main__':
     a = [Point(3, 4), Point(1, 2), Point(3, 5), Point(2,7)]
     # 按 y 排序
-    a = sorted(a, key=lambda p: p.y)
+    a = sorted(a, key=lambda p: p[1])
     print(' '.join(map(str, (a))))
 
+    print(sum(a, start=Point(0, 0)))
     
 
     a = Point(1, 2)
@@ -284,6 +262,7 @@ if __name__ == '__main__':
     a = Point(1, 2, 3, 1)
     print(a.applyM([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]]))
 
+    # a = Point(1)
 
     # print(a.rotate(math.pi/3))
 
