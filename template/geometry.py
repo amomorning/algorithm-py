@@ -19,6 +19,8 @@ class Point:
     def __getitem__(self, key):
         if type(key) is int or slice:
             return self.__v[key]
+
+    def __getattr__(self, key):
         if key == 'x':
             return self.__v[0]
         if key == 'y':
@@ -27,7 +29,6 @@ class Point:
             return self.__v[2]
         if key == 'w':
             return self.__v[3]
-
         raise KeyError('Invalid key: %s' % key)
     
     def __setitem__(self, key, value):
@@ -42,7 +43,6 @@ class Point:
         if key == 'w':
             self.__v[3] = value        
         raise KeyError('Invalid key: %s' % key)
-    
         
     def __neg__(self):
         ret = []
@@ -69,7 +69,6 @@ class Point:
             if self[i] > rhs[i]:
                 return False
         return True
-        
         
     def __lt__(self, rhs):
         if type(rhs) != Point: rhs = Point(rhs)
@@ -140,9 +139,7 @@ class Point:
             x, y, z = rhs
             return Point(-c*y + b*z, c*x - a*z, -b*x + a*y)
         elif len(self.__v) == 2:
-            a, b = self
-            x, y = rhs
-            return a * y - b * x
+            return self.x * rhs.y - self.y * rhs.x
         raise ValueError("Invalid coordinates")
 
         
@@ -177,13 +174,11 @@ class Point:
     def rotate(self, angle):
         assert len(self.__v) == 2
         c, s = math.cos(angle), math.sin(angle)
-        x, y = self
-        return Point(x * c - y * s, x * s + y * c)
+        return Point(self.x * c - self.y * s, self.x * s + self.y * c)
         
     def rotate90(self):
         assert len(self.__v) == 2
-        x, y = self
-        return Point(-y, x)
+        return Point(-self.y, self.x)
     
     def rotateX(self, angle):
         assert len(self.__v)  == 3
@@ -220,11 +215,9 @@ class Point:
         assert len(self.__v) == 3
         if type(axis) != Point: axis = Point(axis)
         
-        ax, ay, az = axis.normalized() * math.sin(angle*0.5)
-        x, y, z = self
-        
-        q = Point(math.cos(angle*0.5), ax, ay, az)
-        p = Point(1.0, x, y, z)
+        axis = axis.normalized() * math.sin(angle*0.5)
+        q = Point(math.cos(angle*0.5), axis.x, axis.y, axis.z)
+        p = Point(1.0, self.x, self.y, self.z)
         return Point(q.mulQ(p).mulQ(q.inv())[1:])
 
 
