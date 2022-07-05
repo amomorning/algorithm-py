@@ -10,7 +10,7 @@ import numpy as np
 
 ## 二维数组
 dp = np.zeros((1<<20, 20), dtype=np.bool)
-dp.shape()
+dp.shape
 
 ################################
 ### 1. 爱因斯坦求和约定
@@ -42,3 +42,7 @@ c = np.einsum('ik,kj->ij', a, b)
 #           [114, 136, 158],
 #           [186, 224, 262]])
 
+a = np.array([1, 2])
+b = np.array([1, 3])
+
+print(np.cross(a, b))

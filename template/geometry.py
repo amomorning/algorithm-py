@@ -355,8 +355,6 @@ class Segment:
     def project_point(self, point):
         u, v = point - self.a, self.b - self.a
         return self.a + u.proj(v)
-        
-
     
     def distance(self, rhs):
         if type(rhs) == Point:
@@ -380,6 +378,7 @@ class Segment:
                     # return abs(a.cross(b).dot(c)) / abs(a.cross(b))
 
                     but here we should calculate the distance between two segments
+                    [2] https://zalo.github.io/blog/closest-point-between-segments/
                 """
                 p = Plane(self.a, self.b-self.a)
                 line = p.project_segment(rhs)
