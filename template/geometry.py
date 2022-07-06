@@ -404,6 +404,84 @@ class Plane:
         a = self.project_point(segment.a)
         b = self.project_point(segment.b)
         return Segment(a, b)
+    
+
+class Triangle:
+    def __init__(self, a, b, c):
+        self.a = Point(a)
+        self.b = Point(b)
+        self.c = Point(c)
+    
+    def __getitem__(self, key):
+        if key == 0:
+            return self.a
+        if key == 1:
+            return self.b
+        if key == 2:
+            return self.c
+        raise KeyError('Invalid item: %s' % key)
+    
+    def __str__(self) -> str:
+        return 'Triangle: [' + str(self.a) + ', ' + str(self.b) + ', ' + str(self.c) + ']'
+
+    @property
+    def aabb(self):
+        d = len(self.a)
+        mn = [math.inf] * d
+        mx = [-math.inf] * d
+        for i in range(3):
+            for j in range(d):
+                mn[j] = min(mn[j], self[i][j])
+                mx[j] = max(mx[j], self[i][j])
+        return mn, mx
+
+    def inside_point(self, p):
+        p, b, c = p - self.a, self.b - self.a, self.c - self.a
+        if b.cross(c) < 0:
+            b, c = c, b
+        if b.cross(p) < 0 or p.cross(c) < 0 or (c-b).cross(p-b) < 0:
+            return False
+        return True
+
+    def uniform_sample(self, num):
+        """ Reference: 
+            [1] https://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle-in-3d
+        """
+        ret = []
+        for i in range(num):
+            r1 = random.uniform(0, 1)
+            r2 = random.uniform(0, 1)
+            p = self.a * (1-math.sqrt(r1)) + self.b * math.sqrt(r1)*(1-r2)\
+                + self.c * math.sqrt(r1)*r2
+            ret.append(p)
+            
+        return ret
+    
+    def uniform_sample_parallelogram(self, num):
+        b, c = self.b - self.a, self.c - self.a
+        ret = []
+        for _ in range(num):
+            p = b * random.uniform(0, 1) + c * random.uniform(0, 1)
+
+            if not self.inside_point(p+self.a):
+                p = b + c - p
+            ret.append(p+self.a)
+        return ret
+    
+    def uniform_sample_rectangle(self, num):
+        mn, mx = self.aabb
+        ret = []
+        for _ in range(num):
+            x = random.uniform(mn[0], mx[0])
+            y = random.uniform(mn[1], mx[1])
+            while not self.inside_point(Point(x, y)):
+                x = random.uniform(mn[0], mx[0])
+                y = random.uniform(mn[1], mx[1])
+            ret.append(Point(x, y))
+        return ret
+    
+
+
 
 if __name__ == '__main__':
 
@@ -460,3 +538,6 @@ if __name__ == '__main__':
     debug(p.project_segment(Segment(Point(2, 1, 0), Point(4, 0, 5))))
 
     check(operator.eq, l.distance(r), 5.0/math.sqrt(6))
+
+    tri = Triangle((10, 10), (7,3), (3, 7))
+    check(operator.eq, tri.inside_point(Point(0, 0)), False)
