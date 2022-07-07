@@ -30,6 +30,12 @@ import math, operator
 EPS = 1e-6
 def cmp(x): return -1 if x < -EPS else int(x > EPS)
 
+def polar_cmp(a, b):
+    if cmp(a.y) * cmp(b.y) <= 0:
+        if cmp(a.y) > 0 or cmp(b.y) > 0: return cmp(a.y - b.y)
+        if cmp(a.y) == 0 and cmp(b.y) == 0: return cmp(a.x - b.x)
+    return cmp(a.cross(b)) 
+
 class Point:
     def __init__(self, *args):
         if len(args) == 1:
@@ -156,6 +162,12 @@ class Point:
     
     def __abs__(self):
         return (self ** 2) ** 0.5
+    
+    @property
+    def polar(self):
+        assert len(self) == 2
+        return self.norm(), 
+
     
     def norm(self, v = 2, maxd = 50):
         return (self ** v) ** (1.0/v) if v <= maxd else max(self)
@@ -390,6 +402,7 @@ class Segment:
             
         raise NotImplementedError("distance is not implemented for type %s" % type(rhs))
 
+
 class Plane:
     def __init__(self, base, normal):
         self.base = base
@@ -425,6 +438,12 @@ class Triangle:
         return 'Triangle: [' + str(self.a) + ', ' + str(self.b) + ', ' + str(self.c) + ']'
 
     @property
+    def normal(self):
+        assert len(self.a) == 3
+        b, c = self.b - self.a, self.c - self.a
+        return b.cross(c).normalized()
+
+    @property
     def aabb(self):
         d = len(self.a)
         mn = [math.inf] * d
@@ -436,12 +455,26 @@ class Triangle:
         return mn, mx
 
     def inside_point(self, p):
-        p, b, c = p - self.a, self.b - self.a, self.c - self.a
-        if b.cross(c) < 0:
-            b, c = c, b
-        if b.cross(p) < 0 or p.cross(c) < 0 or (c-b).cross(p-b) < 0:
+        assert len(p) == len(self.a)
+        if len(p) == 2:
+            p, b, c = p - self.a, self.b - self.a, self.c - self.a
+            if b.cross(c) < 0:
+                b, c = c, b
+            if b.cross(p) < 0 or p.cross(c) < 0 or (c-b).cross(p-b) < 0:
+                return False
+            return True
+        if len(p) == 3:
+            p, b, c = p - self.a, self.b - self.a, self.c - self.a
+            def check(v):
+                if cmp(abs(v)) == 0: return True
+                if cmp(abs(v.normalized()-self.normal)) == 0: return True
+                return False            
+
+            if check(b.cross(p)) and check(p.cross(c)) and check((c-b).cross(p-b)):
+                return True
             return False
-        return True
+        raise NotImplementedError("Higher dimensions are not supported")
+            
 
     def uniform_sample(self, num):
         """ Reference: 
@@ -481,7 +514,21 @@ class Triangle:
         return ret
     
 
+class Polygon:
+    def __init__(self, *args) -> None:
+        self.points = []
+        for pt in args:
+            self.points.append(Point(pt))
 
+    def __getitem__(self, key):
+        return self.points[key]
+
+    def __setitem__(self, key, value):
+        self.points[key] = Point(value)
+    
+    def __str__(self):
+        return 'Polygon[%s]' % ', '.join(map(str, self.points))
+    
 
 if __name__ == '__main__':
 
@@ -492,6 +539,9 @@ if __name__ == '__main__':
     a = [Point(3, 4), Point(1, 2), Point(3, 5), Point(2,7)]
     a = sorted(a, key=lambda p: p[1])
     debug('Sorted by Y:', a)
+
+    a = sorted(a, key=functools.cmp_to_key(polar_cmp), reverse=True)
+    debug('sorted by Polar:', a)
 
     check(operator.eq, sum(a, start=Point(0, 0)), Point(9, 18))
     
@@ -541,3 +591,11 @@ if __name__ == '__main__':
 
     tri = Triangle((10, 10), (7,3), (3, 7))
     check(operator.eq, tri.inside_point(Point(0, 0)), False)
+
+    tri3d = Triangle((10, 10, 0), (7,3, 0), (3, 7,0))
+    check(operator.eq, tri3d.inside_point(Point(5, 5, 0)), True)
+
+
+    ply = Polygon((0, 0), (1, 0), (2, 0), (2, 1), (0, 1))
+
+    debug(ply)
