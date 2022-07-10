@@ -418,6 +418,24 @@ class Plane:
         b = self.project_point(segment.b)
         return Segment(a, b)
     
+    def to_plane(self, plane):
+        move = self.base - plane.base
+        # rotate = 
+
+class Matrix:
+    def __init__(self, size=4):
+        self.size = 4
+        self.m = [[0] * size for _ in range(size)]
+        for i in range(size):
+            self.m[i][i] = 1
+    
+    def from_translate(self, translate):
+        translate = Point(translate)
+        for i in range(self.size-1):
+            self.m[i][-1] = translate[i]
+    
+    def from_rotate_axis(self, axis, angle):
+        pass
 
 class Triangle:
     def __init__(self, a, b, c):
@@ -465,12 +483,12 @@ class Triangle:
             return True
         if len(p) == 3:
             p, b, c = p - self.a, self.b - self.a, self.c - self.a
-            def check(v):
+            def is_zero(v):
                 if cmp(abs(v)) == 0: return True
                 if cmp(abs(v.normalized()-self.normal)) == 0: return True
                 return False            
 
-            if check(b.cross(p)) and check(p.cross(c)) and check((c-b).cross(p-b)):
+            if is_zero(b.cross(p)) and is_zero(p.cross(c)) and is_zero((c-b).cross(p-b)):
                 return True
             return False
         raise NotImplementedError("Higher dimensions are not supported")
@@ -528,7 +546,36 @@ class Polygon:
     
     def __str__(self):
         return 'Polygon[%s]' % ', '.join(map(str, self.points))
+
+    def __len__(self):
+        return len(self.points)
     
+    def __iter__(self):
+        return iter(self.points)
+    
+    @property
+    def segments(self):
+        segs = [Segment(p0, p1) for p0, p1 in zip(self.points, self.points[1:])]
+        segs.append(Segment(self.points[-1], self.points[0]))
+        return segs
+
+    def inside_point(self, p, boundary=True):
+        if len(p) == 2:
+            return self.inside_point_2d(p, boundary)
+        if len(p) == 3:
+            # TODO
+            pass
+
+
+    def inside_point_2d(self, p, boundary=True):
+        for seg in self.segments:
+            if seg.on_point(p):
+                return boundary 
+
+class ConvexHull2D:
+    # TODO
+    def __init__(self, points):
+        self.points = points
 
 if __name__ == '__main__':
 
@@ -599,3 +646,4 @@ if __name__ == '__main__':
     ply = Polygon((0, 0), (1, 0), (2, 0), (2, 1), (0, 1))
 
     debug(ply)
+    debug(isinstance(ply, Polygon))
