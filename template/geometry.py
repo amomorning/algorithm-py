@@ -533,10 +533,14 @@ class Triangle:
     
 
 class Polygon:
+    """ 2D Polygon Implementation
+    """
     def __init__(self, *args) -> None:
-        self.points = []
-        for pt in args:
-            self.points.append(Point(pt))
+        if len(args) == 1:
+            args = args[0]
+        self.points = [Point(pt[0], pt[1]) for pt in args]
+        self.__convex = None
+        self.__area = None
 
     def __getitem__(self, key):
         return self.points[key]
@@ -554,30 +558,81 @@ class Polygon:
         return iter(self.points)
     
     @property
+    def is_convex(self):
+        if self.__convex is not None: 
+            return self.__convex
+        
+        self.__convex = True
+        for p0, p1, p2 in zip(self.points, self.points[1:], self.points[2:]):
+            if (p1 - p0).cross(p2 - p0) < 0:
+                self.__convex = False
+        return self.__convex
+    
+    @property
     def segments(self):
         segs = [Segment(p0, p1) for p0, p1 in zip(self.points, self.points[1:])]
         segs.append(Segment(self.points[-1], self.points[0]))
         return segs
+    
+    @property
+    def triangles(self):
+        # TODO: triangulate
+        tris = []
+        if self.is_convex:
+            p0 = self.points[0]
+            for p1, p2 in zip(self.points, self.points[1:]):
+                tris.append(Triangle(p0, p1, p2))
+        else:     
+            # earcut
+            pass
+        return tris
+
+    @property
+    def area(self, doubled = True):
+        self.A = 0
+        for tri in self.triangles:
+            self.A += tri.area
+        if not doubled: self.A /= 2
+        return self.A
 
     def inside_point(self, p, boundary=True):
-        if len(p) == 2:
-            return self.inside_point_2d(p, boundary)
-        if len(p) == 3:
-            # TODO
-            pass
-
-
-    def inside_point_2d(self, p, boundary=True):
+        t = 0
         for seg in self.segments:
             if seg.on_point(p):
                 return boundary 
+            a, b = seg
+            if cmp(a.y - b.y) > 0: a, b = b, a
+            if cmp((a - p).cross(b - p)) < 0 and cmp(a.y - p.y) < 0 and cmp(p.y - b.y) <= 0:
+                t += 1
+        return bool(t & 1)
 
-class ConvexHull2D:
+class ConvexHull:
     # TODO
     def __init__(self, points):
-        self.points = points
+        self.points = list(map(Point, points))
+        self.build()
+    
+    def build(self):
+        pts = sorted(self.points)
+        n, k = len(pts), 0
+        convex = [None] * (n*2)
+        for p in pts:
+            while k > 1 and cmp((convex[k-1] - p).cross(convex[k-2] - p)) <= 0:
+                k -= 1
+            convex[k] = p
+            k += 1
+        t = k
+        for p in pts[-2::-1]:
+            while k > t and cmp((convex[k-1] - p).cross(convex[k-2] - p)) <= 0:
+                k -= 1
+            convex[k] = p
+            k += 1
+        
+        self.polygon = Polygon(convex[:min(n,k-1)])
 
-if __name__ == '__main__':
+
+
+def main():
 
     check(operator.lt, Point(1, 2), Point(1, 2))
     check(operator.le, Point(1, 2), Point(1, 2))
@@ -647,3 +702,33 @@ if __name__ == '__main__':
 
     debug(ply)
     debug(isinstance(ply, Polygon))
+    debug(ply.is_convex)
+    debug(ply.is_convex)
+
+def test_convex():
+    pts = []
+    for _ in range(100):
+        length = random.randint(0, 100)
+        theta = random.uniform(0,1)*math.pi*2
+        pts.append((length*math.cos(theta), length*math.sin(theta)))
+        
+    
+
+    ply = ConvexHull(pts).polygon
+    print(' '.join(map(str, pts)))
+    print(' '.join(map(str, ply.points)))
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')
+    ax.scatter([p[0] for p in pts],[p[1] for p in pts], c='r')
+
+    plt.show()
+
+
+if __name__ == '__main__':
+    # main()
+    test_convex()
