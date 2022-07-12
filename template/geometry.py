@@ -36,6 +36,39 @@ def polar_cmp(a, b):
         if cmp(a.y) == 0 and cmp(b.y) == 0: return cmp(a.x - b.x)
     return cmp(a.cross(b)) 
 
+def find_points_in_aabb(xs, ys, aabb, boundary=True):
+    """ pts: Sorted Points in [(x, y, id), ...]
+        aabb: [[minx, miny], [maxx, maxy]]
+        Returns: index list
+    """
+    if boundary:
+        xl = bisect.bisect_left(xs, (aabb[0][0], -math.inf))
+        xr = bisect.bisect_left(xs, (aabb[1][0]+EPS, math.inf))
+        print(xs)
+        print(xs[xl: xr])
+
+        yl = bisect.bisect_left(ys, (aabb[0][1], -math.inf))
+        yr = bisect.bisect_left(ys, (aabb[1][1]+EPS, math.inf))
+    
+        print(ys)
+        print(ys[yl: yr])
+    else:
+        xl = bisect.bisect_left(xs, (aabb[0][0]+EPS, math.inf))
+        xr = bisect.bisect_left(xs, (aabb[1][0]+EPS, -math.inf))
+
+        yl = bisect.bisect_left(ys, (aabb[0][1], math.inf))
+        yr = bisect.bisect_left(ys, (aabb[1][1], -math.inf))
+    idx = set([x[1] for x in xs[xl:xr]])
+    idy = set([y[1] for y in ys[yl:yr]])
+    return idx & idy
+
+    # (x0, y0), (x1, y1) = aabb
+    # l = bisect.bisect_left(pts, (x0, -math.inf, -math.inf))
+    # r = bisect.bisect_right(pts, (x1, math.inf, math.inf))
+    
+
+    pass
+
 class Point:
     def __init__(self, *args):
         if len(args) == 1:
@@ -584,7 +617,9 @@ class Polygon:
                 tris.append(Triangle(p0, p1, p2))
         else:     
             # earcut
-            pass
+            trids = self.earcut()
+            for a, b, c in trids:
+                tris.append(Triangle(self.points[a], self.points[b], self.points[c]))
         return tris
 
     @property
@@ -594,6 +629,38 @@ class Polygon:
             self.A += tri.area
         if not doubled: self.A /= 2
         return self.A
+    
+    def earcut(self):
+        cur = range(len(self.points))
+        remain = [0]
+        tris = []
+        xs = [(self.points[i].x, i) for i in range(len(self.points))]
+        ys = [(self.points[i].y, i) for i in range(len(self.points))]
+        while len(cur) >= 3:
+            for m, r in zip(cur[1:], cur[2:]):
+                l = remain[-1]
+                if (self.points[r] - self.points[m]).cross(self.points[l] - self.points[m]) > 0:
+                    tri = Triangle(self.points[l], self.points[m], self.points[r]) 
+                    flag = True
+                    
+                    ids = find_points_in_aabb(xs, ys, tri.aabb, False)
+                    for p in ids:
+                        if p == l or p == m or p == r:
+                            continue
+                        if tri.inside_point(self.points[p]):
+                            flag = False
+
+                    if flag == True:
+                        tris.append([l, m, r])
+                        if r == cur[-1]:
+                            remain.append(r)
+                        continue
+                remain.append(m)
+            cur = remain
+            remain = [cur[0]]
+        if len(cur) == 3: tris.append(cur)
+        return tris
+                    
 
     def inside_point(self, p, boundary=True):
         t = 0
@@ -607,9 +674,12 @@ class Polygon:
         return bool(t & 1)
 
 class ConvexHull:
-    # TODO
     def __init__(self, points):
         self.points = list(map(Point, points))
+        self.build()
+
+    def add_point(self, point):
+        self.points.append(point)
         self.build()
     
     def build(self):
@@ -628,12 +698,19 @@ class ConvexHull:
             convex[k] = p
             k += 1
         
-        self.polygon = Polygon(convex[:min(n,k-1)])
+        self.points = convex[:min(n,k-1)]
+        self.polygon = Polygon(self.points)
 
 
 
 def main():
+    # test_points()
+    # test_segments()
+    test_polygon()
+    # test_convex()
+    # test_inside_aabb()
 
+def test_points():
     check(operator.lt, Point(1, 2), Point(1, 2))
     check(operator.le, Point(1, 2), Point(1, 2))
     
@@ -661,16 +738,13 @@ def main():
     check(operator.eq, Point(2, 3, 4, 1), a.apply_matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]]))
 
     # a = Point(1)
-
+def test_segments():
     # print(a.rotate(math.pi/3))
     l = Segment(Point(0, 0), Point(3, 3))
     check(operator.eq, l.lerp(0.3), Point(0.9, 0.9))
     check(operator.eq, l.intersection(Segment(Point(1, 0), Point(0, 1))), Point(0.5, 0.5))
     # (3, 8)
 
-    debug((Point(1, 2, 3).dot(Point(-2, -4, -6))))
-
-    # print(a.dot(b))
     check(operator.eq, Point(1, 2, 3).select((0, 2)), Point(1, 3))
 
     l = Segment(Point(0, 0, 0), Point(2, 4, 6))
@@ -691,6 +765,35 @@ def main():
 
     check(operator.eq, l.distance(r), 5.0/math.sqrt(6))
 
+def test_inside_aabb():
+    n = 1000
+    pts = [Point(random.randint(0, 100), random.randint(0, 100)) for _ in range(n)]
+    print(' '.join(map(str, pts)))
+    xs = sorted([(pts[i].x, i) for i in range(n)])
+    ys = sorted([(pts[i].y, i) for i in range(n)])
+    res = find_points_in_aabb(xs, ys, [[20, 20], [40, 40]])
+    print(res)
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    inside = [[], []]
+    outside = [[], []]
+    for i in range(n):
+        if i in res:
+            inside[0].append(pts[i].x)
+            inside[1].append(pts[i].y)
+        else:
+            outside[0].append(pts[i].x)
+            outside[1].append(pts[i].y)
+    ax.scatter(inside[0], inside[1], c='r')
+    ax.scatter(outside[0], outside[1], c='k')
+    plt.show()
+    
+
+def test_polygon():
+
+
     tri = Triangle((10, 10), (7,3), (3, 7))
     check(operator.eq, tri.inside_point(Point(0, 0)), False)
 
@@ -705,18 +808,24 @@ def main():
     debug(ply.is_convex)
     debug(ply.is_convex)
 
+    print(ply.earcut())
+    ply = Polygon((1, 0), (6, 1), (4, 3), (3, 2), (2, 4), (0, 5))
+    print(ply.earcut())
+
 def test_convex():
     pts = []
     for _ in range(100):
-        length = random.randint(0, 100)
+        length = random.uniform(1, 10)
         theta = random.uniform(0,1)*math.pi*2
-        pts.append((length*math.cos(theta), length*math.sin(theta)))
+        pts.append((length*math.cos(theta) + 10, length*math.sin(theta) + 10))
         
+    # for _ in range(200):
+    #     pts.append((random.randint(0, 10), random.randint(0, 10)))
     
 
     ply = ConvexHull(pts).polygon
-    print(' '.join(map(str, pts)))
-    print(' '.join(map(str, ply.points)))
+    # print(' '.join(map(str, pts)))
+    # print(' '.join(map(str, ply.points)))
 
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(10, 10))
@@ -730,5 +839,4 @@ def test_convex():
 
 
 if __name__ == '__main__':
-    # main()
-    test_convex()
+    main()
