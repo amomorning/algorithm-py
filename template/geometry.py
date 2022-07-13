@@ -631,29 +631,32 @@ class Polygon:
         return self.A
     
     
-    def earcut_benchmark(self):
+    def earcut(self):
         """ Reference
             [1] https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         """
         n, p = len(self.points), self.points
         prev = [n-1] + list(range(n-1))
         next = list(range(1, n)) + [0]
-        convex, refvex = collections.deque(), set()
+        convex, refvex = [], set()
         for i in range(n):
-            if (p[prev[i]] - p[i]).cross(p[next[i]] - p[i]) <= 0:
+            if (p[prev[i]] - p[i]).cross(p[next[i]] - p[i]) < 0:
                 convex.append(i)
-            else:
+            elif (p[prev[i]] - p[i]).cross(p[next[i]] - p[i]) > 0:
                 refvex.add(i)
         vis, res = [0] * n, []
+        xs = sorted([(p[i].x, i) for i in range(n)])
+        ys = sorted([(p[i].y, i) for i in range(n)])
         while convex:
-            m = convex.popleft()
+            m = convex.pop()
             if vis[m] == 1 or n - len(res) < 3:
                 continue
             l, r = prev[m], next[m]
             
             tri = Triangle(p[l], p[m], p[r])
+            ids = find_points_in_aabb(xs, ys, tri.aabb, False) & refvex
             is_ear = True
-            for i in refvex:
+            for i in ids:
                 if i == l or i == r: continue
                 is_ear &= (not tri.inside_point(p[i]))
                 if not is_ear: break
@@ -669,38 +672,6 @@ class Polygon:
                         refvex.discard(i)
         return res
 
-    def earcut(self):
-        n, p = len(self.points), self.points
-        cur = range(n)
-        remain = [0]
-        tris = []
-
-        xs = sorted([(p[i].x, i) for i in range(n)])
-        ys = sorted([(p[i].y, i) for i in range(n)])
-        while len(cur) > 3:
-            for c in range(1, len(cur)):
-                l = remain[-1]
-                m = cur[c]
-                r = remain[0] if c == len(cur) - 1 else cur[c+1]
-
-                if (p[r] - p[m]).cross(p[l] - p[m]) > 0:
-                    tri = Triangle(p[l], p[m], p[r]) 
-                    is_ear = True
-                    ids = find_points_in_aabb(xs, ys, tri.aabb, False)
-                    for i in ids:
-                        if i == l or i == m or i == r: continue
-                        if tri.inside_point(p[i]):
-                            is_ear = False
-
-                    if is_ear == True:
-                        tris.append((l, m, r))
-                        continue
-                remain.append(m)
-            cur = remain
-            remain = [cur[0]]
-        if len(cur) == 3: tris.append(cur)
-        return tris
-                    
 
     def inside_point(self, p, boundary=True):
         t = 0
@@ -879,8 +850,6 @@ def test_earcut():
     plt.show()
 
 def test_polygon():
-
-
     tri = Triangle((10, 10), (7,3), (3, 7))
     check(operator.eq, tri.inside_point(Point(0, 0)), False)
 
@@ -895,58 +864,32 @@ def test_polygon():
     debug(ply.is_convex)
     debug(ply.is_convex)
 
-    print(ply.earcut_benchmark())
+    print(ply.earcut())
     ply = Polygon((1, 0), (6, 1), (4, 3), (3, 2), (2, 4), (0, 5))
-    print(ply.earcut_benchmark())
+    print(ply.earcut())
 
     import random, timeit
          
     ply = Polygon((2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1))
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for i, p in enumerate(ply.points):
+        ax.text(p.x, p.y, str(i), c='r')
     
-    ply = Polygon(*gen_polygon(1000))
-
-
-
-    start = timeit.default_timer()
-    # do something
+    for tri in ply.triangles:
+        a, b, c = tri.a, tri.b, tri.c
+        ax.plot([a.x, b.x, c.x, a.x], [a.y, b.y, c.y, a.y], c='b')
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')
     
-    print(len(ply.earcut_benchmark()))
-        
-    # elapsed time
-    elapsed = (timeit.default_timer() - start)
-    print(elapsed)
-    
-    start = timeit.default_timer()
-    # do something
-    
-    print(len(ply.earcut()))
-    
-    # elapsed time
-    elapsed = (timeit.default_timer() - start)
-    print(elapsed)
-
-    # print(ply.earcut_benchmark())
-    # print(ply.earcut())
-    # if len(ply.earcut()) < len(ply.earcut_benchmark()):
-
-    #     import matplotlib.pyplot as plt
-    #     fig = plt.figure(figsize=(10, 10))
-    #     ax = fig.add_subplot(1, 1, 1)
-
-    #     for i, p in enumerate(ply.points):
-    #         ax.text(p.x, p.y, str(i), c='r')
-        
-    #     for tri in ply.triangles:
-    #         a, b, c = tri.a, tri.b, tri.c
-    #         ax.plot([a.x, b.x, c.x, a.x], [a.y, b.y, c.y, a.y], c='b')
-    #     for seg in ply.segments:
-    #         a, b = seg.a, seg.b
-    #         ax.plot([a.x, b.x], [a.y, b.y], c='k')
-        
-    #     print(len(ply.points))
-    #     for x, y in ply.points:
-    #         print(x, y)
-    #     plt.show()
+    print(len(ply.points))
+    for x, y in ply.points:
+        print(x, y)
+    plt.show()
 
 def test_convex():
     pts = []
