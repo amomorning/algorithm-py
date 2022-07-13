@@ -632,6 +632,9 @@ class Polygon:
     
     
     def earcut_benchmark(self):
+        """ Reference
+            [1] https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        """
         n, p = len(self.points), self.points
         prev = [n-1] + list(range(n-1))
         next = list(range(1, n)) + [0]
