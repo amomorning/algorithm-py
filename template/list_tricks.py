@@ -17,3 +17,18 @@ merge_dict({'a': 1, 'b': 2}, {'c': 3})  # {'a': 1, 'b': 2, 'c': 3}
 dic = sorted(d.items(), key=lambda z: z[0], reverse=True)
 
 # 去重
+a = [3, 1, 1, 2, 5, 3, 6]
+list(set(a))
+
+# 离散化
+from bisect import bisect_left
+def discretization(arr:list) -> list:
+    ret = []
+    idx = sorted(set(arr))
+    for a in arr:
+        x = bisect_left(idx, a)
+        ret.append(x)
+    return ret
+
+# 绑定
+list(zip(a, range(len(a))))
