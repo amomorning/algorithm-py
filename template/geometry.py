@@ -504,6 +504,16 @@ class Triangle:
                 mn[j] = min(mn[j], self[i][j])
                 mx[j] = max(mx[j], self[i][j])
         return mn, mx
+    
+    @property
+    def barycentric(self):
+        return (self.a + self.b + self.c) / 3.0
+    
+    def area(self, doubled = False):
+        b, c = self.b - self.a, self.c - self.a
+        self.A = b.cross(c)
+        if not doubled: self.A /= 2
+        return self.A
 
     def inside_point(self, p):
         assert len(p) == len(self.a)
@@ -609,28 +619,39 @@ class Polygon:
     
     @property
     def triangles(self):
-        # TODO: triangulate
         tris = []
         if self.is_convex:
             p0 = self.points[0]
-            for p1, p2 in zip(self.points, self.points[1:]):
+            for p1, p2 in zip(self.points[1:], self.points[2:]):
                 tris.append(Triangle(p0, p1, p2))
         else:     
-            # earcut
             trids = self.earcut()
             for a, b, c in trids:
                 tris.append(Triangle(self.points[a], self.points[b], self.points[c]))
         return tris
-
-    @property
-    def area(self, doubled = True):
+    
+    def signed_area(self, doubled = True):
         self.A = 0
-        for tri in self.triangles:
-            self.A += tri.area
-        if not doubled: self.A /= 2
+        p0 = self.points[0]
+        for p1, p2 in zip(self.points[1:], self.points[2:]):
+            self.A += (p1 - p0).cross(p2 - p0)
+        if not doubled: A /= 2
         return self.A
+
     
+    def area(self, doubled = False):
+        self.__area = 0
+        for tri in self.triangles:
+            self.__area += tri.area(True)
+        if not doubled: self.__area /= 2
+        return self.__area
     
+    def barycentric(self):
+        self.__center = Point(0.0, 0.0)
+        for tri in self.triangles:
+            self.__center += tri.area() * tri.barycentric
+        return self.__center / self.area() 
+
     def earcut(self):
         """ Reference
             [1] https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -672,7 +693,6 @@ class Polygon:
                         refvex.discard(i)
         return res
 
-
     def inside_point(self, p, boundary=True):
         t = 0
         for seg in self.segments:
@@ -713,11 +733,11 @@ class ConvexHull:
         self.polygon = Polygon(self.points)
 
 
-
 def main():
     # test_points()
     # test_segments()
-    test_polygon()
+    # test_polygon()
+    test_polygon_barycentric()
     # test_earcut()
     # test_convex()
     # test_inside_aabb()
@@ -916,6 +936,34 @@ def test_convex():
 
     plt.show()
 
+def test_polygon_barycentric():
+    # pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
+    # pts = [(0, 0), (5, 0), (5, 8), (4, 8), (4, 5), (0, 5)]
+    pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
+    ply = Polygon(pts)
+
+    printf(ply.area())
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')
+
+    tri_pt = [tri.barycentric for tri in ply.triangles]
+    ax.scatter([p[0] for p in tri_pt],[p[1] for p in tri_pt], c='b')
+
+    center = sum(ply.points, Point(0, 0))/len(ply.points)
+    ax.scatter(center[0], center[1], c='r')
+    ax.text(center[0], center[1], 'average', c='r')
+
+    b = ply.barycentric()
+    ax.scatter(b[0], b[1], c='y')
+    ax.text(b[0], b[1],'barycentric', c='y')
+
+    plt.show()
 
 if __name__ == '__main__':
     main()
