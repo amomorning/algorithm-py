@@ -506,7 +506,7 @@ class Triangle:
         return mn, mx
     
     @property
-    def barycentric(self):
+    def centroid(self):
         return (self.a + self.b + self.c) / 3.0
     
     def area(self, doubled = False):
@@ -514,6 +514,32 @@ class Triangle:
         self.A = b.cross(c)
         if not doubled: self.A /= 2
         return self.A
+    
+    def incircle(self):
+        """ Reference
+            [1] Heron's formula: https://en.wikipedia.org/wiki/Heron%27s_formula
+        """
+        a = abs(self.b - self.c)
+        b = abs(self.a - self.c)
+        c = abs(self.a - self.b)
+        s = (a + b + c)/2
+        r = math.sqrt((s-a)*(s-b)*(s-c)/s)
+        return (a*self.a + b*self.b + c*self.c)/(a+b+c), r
+    
+    def circumcircle(self):
+        """ Reference
+            [1] https://en.wikipedia.org/wiki/Circumscribed_circle#Cartesian_coordinates_from_cross-_and_dot-products
+        """
+        a = self.b - self.c # p2-p3
+        b = self.c - self.a # p3-p1
+        c = self.a - self.b # p1-p2
+        r = abs(a)*abs(b)*abs(c)/(abs(b.cross(a)) * 2)
+
+        tmp = - c.cross(a)**2 * 2
+        alpha = a**2 * c.dot(b) 
+        beta = b**2 * c.dot(a) 
+        gamma = c**2 * b.dot(a) 
+        return (alpha*self.a + beta*self.b + gamma*self.c) / tmp, r
 
     def inside_point(self, p):
         assert len(p) == len(self.a)
@@ -646,10 +672,10 @@ class Polygon:
         if not doubled: self.__area /= 2
         return self.__area
     
-    def barycentric(self):
+    def centroid(self):
         self.__center = Point(0.0, 0.0)
         for tri in self.triangles:
-            self.__center += tri.area() * tri.barycentric
+            self.__center += tri.area() * tri.centroid
         return self.__center / self.area() 
 
     def earcut(self):
@@ -737,7 +763,7 @@ def main():
     # test_points()
     # test_segments()
     # test_polygon()
-    test_polygon_barycentric()
+    # test_polygon_centroid()
     # test_earcut()
     # test_convex()
     # test_inside_aabb()
@@ -746,6 +772,7 @@ def main():
     # print(len(pts))
     # for x, y in pts:
     #     print(x, y)
+    test_triangle()
 
 def test_points():
     check(operator.lt, Point(1, 2), Point(1, 2))
@@ -936,7 +963,7 @@ def test_convex():
 
     plt.show()
 
-def test_polygon_barycentric():
+def test_polygon_centroid():
     # pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
     # pts = [(0, 0), (5, 0), (5, 8), (4, 8), (4, 5), (0, 5)]
     pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
@@ -952,18 +979,46 @@ def test_polygon_barycentric():
         a, b = seg.a, seg.b
         ax.plot([a.x, b.x], [a.y, b.y], c='k')
 
-    tri_pt = [tri.barycentric for tri in ply.triangles]
+    tri_pt = [tri.centroid for tri in ply.triangles]
     ax.scatter([p[0] for p in tri_pt],[p[1] for p in tri_pt], c='b')
 
     center = sum(ply.points, Point(0, 0))/len(ply.points)
     ax.scatter(center[0], center[1], c='r')
     ax.text(center[0], center[1], 'average', c='r')
 
-    b = ply.barycentric()
+    b = ply.centroid()
     ax.scatter(b[0], b[1], c='y')
-    ax.text(b[0], b[1],'barycentric', c='y')
+    ax.text(b[0], b[1],'centroid', c='y')
 
     plt.show()
+
+def test_triangle():
+    tri = Triangle((0, 0, 0), (1, 1.5, 2), (0, 1, 1))
+
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as pat
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d') 
+
+    for i in range(3):
+        a, b = tri[i], tri[(i+1)%3]
+        ax.plot([a.x, b.x], [a.y, b.y], [a.z, b.z], c='k', zorder=-1)
+        ax.scatter(a.x, a.y, a.z, c='r')
+    
+    c = tri.centroid
+    ax.scatter(c.x, c.y, c.z, c='b')
+    # ax.text(c.x, c.y, 'centroid', c='b')
+
+    c, r = tri.incircle()
+    ax.scatter(c.x, c.y, c.z, c='g')
+    # ax.text(c.x, c.y, 'incenter', c='g') 
+    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='g', zorder=-9))
+
+    c, r = tri.circumcircle()
+    ax.scatter(c.x, c.y, c.z, c='y')
+    # ax.text(c.x, c.y, 'circumcenter', c='y') 
+    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='y', zorder=-10))
+    plt.show() 
 
 if __name__ == '__main__':
     main()
