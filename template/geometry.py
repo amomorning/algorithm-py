@@ -25,50 +25,78 @@ def check(op, lhs, rhs=None):
     else:
         printf(lhs, op.__name__, rhs)
 
+class Iterator:
+    def __init__(self, label):
+        self.label = label
+   
+    def __lt__(self, other)-> bool:
+        return self.label < other.label
+    
+    def __eq__(self, other) -> bool:
+        return self.label == other.label
+
+    def __repr__(self):
+        return f'Iterator({self.label})'
+
 class Multiset:
     def __init__(self):
         self.v = []
+        self.it = 0
 
-    def update(self, item, new_item):
+    def update(self, iter, new_item):
         """ o(N) """
-        self.remove(item)
-        self.insert(new_item)
-        return new_item
+        self.remove(iter)
+        return self.insert(new_item)
     
-    def remove(self, item):
+    def get(self, iter):
+        idx = self.find(iter)
+        return self.v[idx][0]
+    
+    def find(self, iter):
         """ o(N) """
-        idx = bisect.bisect_left(self.v, item)
+        for i, item in enumerate(self.v):
+            if item[1] == iter:
+                return i
+        return -1
+    
+    def remove(self, iter):
+        """ o(N) """
+        idx = self.find(iter)
         del self.v[idx]
 
     def insert(self, item):
         """ o(N) """
-        bisect.insort_left(self.v, item)
-        return item
+        iter = Iterator(self.it)
+        self.it += 1
+        bisect.insort_left(self.v, (item, iter))
+        return iter
 
-    def next(self, item):
-        """ o(logN)"""
-        idx = bisect.bisect_left(self.v, item)
-        if idx == len(self.v): return None
-        return self.v[idx+1]
+    def next(self, iter):
+        """ o(logN): return iterator"""
+        idx = self.find(iter)
+        if idx == len(self.v): return self.v[idx][1]
+        return self.v[idx+1][1]
     
-    def prev(self, item):
+    def prev(self, iter):
         """ o(logN) """
-        idx = bisect.bisect_left(self.v, item)
-        if idx == 0: return None
-        return self.v[idx-1]
+        idx = self.find(iter)
+        if idx == 0: return self.v[idx][1]
+        return self.v[idx-1][1]
     
     def lower_bound(self, item):
         """ o(logN) """
-        idx = bisect.bisect_left(self.v, item)
-        return self.v[idx]
+        idx = bisect.bisect_left(self.v, (item, -math.inf))
+        return self.v[idx][1]
     
     def end(self):
         """ o(1) """
-        return self.v[-1]
+        return self.v[-1][1]
+
 
 
 import math, operator
-EPS = 1e-6
+EPS = 1e-12
+INF = 1e100
 def cmp(x): return -1 if x < -EPS else int(x > EPS)
 
 def polar_cmp(a, b):
@@ -804,11 +832,11 @@ class ConvexHull:
 
 sweepx = 0.0
 class Arc:
-    def __init__(self, p, q, i):
+    def __init__(self, p, q, i, id=0):
         self.p = p
         self.q = q
         self.i = i
-        self.id = 0
+        self.id = id
     
     def __str__(self):
         return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
@@ -817,13 +845,14 @@ class Arc:
         return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
     
     def get_y(self, x):
-        if self.q.y == math.inf: return math.inf
+        if self.q.y == INF: return INF
         x += EPS
         mid = (self.p + self.q) * 0.5
         dir = (self.p - mid).rotate_90()
-        if cmp(dir.y) == 0: return math.inf
-
         D = (x - self.p.x) * (x - self.q.x)
+        # dir.y += EPS
+        if cmp(dir.y) == 0: return INF/2
+        # D = abs((x - self.p.x) * (x - self.q.x))
         return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir)) / dir.y
     
     def __lt__(self, o):
@@ -833,6 +862,7 @@ class Arc:
         return self.get_y(sweepx) < o
     
 import heapq, bisect
+
 
 class DelaunayTrianglation:
     """ Reference
@@ -844,8 +874,9 @@ class DelaunayTrianglation:
     """
     def __init__(self, points):
         self.n = len(points)
-        points = sorted(points)
-        self.points = [(points[i], i) for i in range(self.n)]
+        random_angle = random.random() * math.pi / 180
+        points = [Point(pt).rotate(random_angle) for pt in points]
+        self.points = sorted([(points[i], i) for i in range(self.n)])
 
         self.Q = []
         self.edges = [] # delaunay edges
@@ -853,11 +884,12 @@ class DelaunayTrianglation:
         self.beachline = Multiset()
         
     
-    def update(self, item):
+    def update(self, iter):
         global sweepx
+        item = self.beachline.get(iter)
         if item.i == -1: return
         self.valid[-item.id] = False
-        a = self.beachline.prev(item)
+        a = self.beachline.get(self.beachline.prev(iter))
 
         u, v = item.q - item.p, a.p - item.p
         if cmp(abs(u.cross(v))) == 0: return # collinear: doesn't generate a vertex event
@@ -866,12 +898,10 @@ class DelaunayTrianglation:
         item.id = self.ti
 
         self.valid.append(True)
-        tri = Triangle(item.p, item.q, a.p)
-        c, r = tri.circumcircle()
+        c, r = Triangle(a.p, item.p, item.q).circumcircle()
         x = c.x + r
-
-        if x > sweepx - EPS and a.get_y(x) + EPS > item.get_y(x):
-            heapq.heappush(self.Q, (x, item.id, item))
+        if cmp(x - sweepx) >= 0 and cmp(a.get_y(x) - item.get_y(x)) >= 0:
+            heapq.heappush(self.Q, (x, item.id, iter))
 
     def add_edge(self, i, j):
         if i == -1 or j == -1: return
@@ -879,23 +909,28 @@ class DelaunayTrianglation:
     
     def add(self, i):
         p = self.points[i][0]
+        # find arc to split
         c = self.beachline.lower_bound(p.y)
-        b = self.beachline.insert(Arc(p, c.p, i))
-        a = self.beachline.insert(Arc(c.p, p, c.i))
-        self.add_edge(i, c.i)
+        c_obj = self.beachline.get(c)
+        b = self.beachline.insert(Arc(p, c_obj.p, i))
+        a = self.beachline.insert(Arc(c_obj.p, p, c_obj.i))
+        self.add_edge(i, c_obj.i)
 
         self.update(a)
         self.update(b)
         self.update(c)
     
-    def remove(self, item):
-        a = self.beachline.prev(item)
-        b = self.beachline.next(item)
-        # print(item, a, b)
-        self.beachline.remove(item)
-        self.add_edge(a.i, b.i)
-        a = self.beachline.update(a, Arc(a.p, b.p, a.i))
-        
+    def remove(self, iter):
+        global sweepx
+        a = self.beachline.prev(iter)
+        b = self.beachline.next(iter)
+        self.beachline.remove(iter)
+
+        a_obj = self.beachline.get(a)
+        b_obj = self.beachline.get(b)
+        a = self.beachline.update(a, Arc(a_obj.p, b_obj.p, a_obj.i, a_obj.id))
+        self.add_edge(a_obj.i, b_obj.i)
+
         self.update(a)
         self.update(b)
 
@@ -905,7 +940,7 @@ class DelaunayTrianglation:
         X *= 3
 
         self.beachline.insert(Arc(Point(-X, -X), Point(-X, X), -1))
-        self.beachline.insert(Arc(Point(-X, X), Point(math.inf, math.inf), -1))
+        self.beachline.insert(Arc(Point(-X, X), Point(INF, INF), -1))
 
         for i in range(self.n):
             heapq.heappush(self.Q, (self.points[i][0].x, i, self.beachline.end()))
@@ -913,14 +948,13 @@ class DelaunayTrianglation:
         self.ti = 0
         self.valid = [False]
         while self.Q:
-            print(self.beachline.v)
             e = heapq.heappop(self.Q)
             sweepx = e[0]
+
             if e[1] >= 0:
                 self.add(e[1])
             elif self.valid[-e[1]]:
                 self.remove(e[2])
-
 
 
 def main():
@@ -1188,24 +1222,26 @@ def test_triangle():
 
 
 def test_delaunay():
-    pts = [(0, 0), (1, 0), (2, 1), (1, 2), (4, 3), (3, 5), (1, 3)]
+    pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
+    # pts = [(0, 0), (1, -1), (3, 1), (1.5, 2), (4, 3), (3, 5), (1, 3)]
+    # pts = [(0, 0), (1, -1), (1.5, 2), (3, 1), (4, 3)]#, (3, 5), (1, 3)]
 
-    random_angle = random.random() * math.pi/60
-    pts = [Point(p).rotate(random_angle) for p in pts]
-
-    
-
+    pts = [Point(pt) for pt in pts]
     delaunay = DelaunayTrianglation(pts)
     delaunay.build()
 
     import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=(6, 4))
     ax = fig.add_subplot(111)
 
     
-    ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
+
 
     print(delaunay.edges)
+    ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
+    for i in range(len(pts)):
+        x, y = pts[i].x, pts[i].y
+        ax.text(x, y, str(i))
     for u, v in delaunay.edges:
         a, b = pts[u], pts[v]
         ax.plot([a.x, b.x], [a.y, b.y], color='k', zorder=-1)
