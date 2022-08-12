@@ -25,6 +25,47 @@ def check(op, lhs, rhs=None):
     else:
         printf(lhs, op.__name__, rhs)
 
+class Multiset:
+    def __init__(self):
+        self.v = []
+
+    def update(self, item, new_item):
+        """ o(N) """
+        self.remove(item)
+        self.insert(new_item)
+        return new_item
+    
+    def remove(self, item):
+        """ o(N) """
+        idx = bisect.bisect_left(self.v, item)
+        del self.v[idx]
+
+    def insert(self, item):
+        """ o(N) """
+        bisect.insort_left(self.v, item)
+        return item
+
+    def next(self, item):
+        """ o(logN)"""
+        idx = bisect.bisect_left(self.v, item)
+        if idx == len(self.v): return None
+        return self.v[idx+1]
+    
+    def prev(self, item):
+        """ o(logN) """
+        idx = bisect.bisect_left(self.v, item)
+        if idx == 0: return None
+        return self.v[idx-1]
+    
+    def lower_bound(self, item):
+        """ o(logN) """
+        idx = bisect.bisect_left(self.v, item)
+        return self.v[idx]
+    
+    def end(self):
+        """ o(1) """
+        return self.v[-1]
+
 
 import math, operator
 EPS = 1e-6
@@ -80,7 +121,10 @@ class Point:
 
     def __str__(self):
         return 'Point' + str(tuple(self.__v))
-    
+
+    def __repr__(self):
+        return 'Point' + str(tuple(self.__v))
+
     def print(self):
         return ' '.join(map(str, self.__v))
     
@@ -533,7 +577,7 @@ class Triangle:
         a = self.b - self.c # p2-p3
         b = self.c - self.a # p3-p1
         c = self.a - self.b # p1-p2
-        r = abs(a)*abs(b)*abs(c)/(abs(b.cross(a)) * 2)
+        r = abs(a)*abs(b)*abs(c)/(abs(b.cross(a) + EPS) * 2)
 
         tmp = - c.cross(a)**2 * 2
         alpha = a**2 * c.dot(b) 
@@ -758,6 +802,126 @@ class ConvexHull:
         self.points = convex[:min(n,k-1)]
         self.polygon = Polygon(self.points)
 
+sweepx = 0.0
+class Arc:
+    def __init__(self, p, q, i):
+        self.p = p
+        self.q = q
+        self.i = i
+        self.id = 0
+    
+    def __str__(self):
+        return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
+    
+    def __repr__(self):
+        return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
+    
+    def get_y(self, x):
+        if self.q.y == math.inf: return math.inf
+        x += EPS
+        mid = (self.p + self.q) * 0.5
+        dir = (self.p - mid).rotate_90()
+        if cmp(dir.y) == 0: return math.inf
+
+        D = (x - self.p.x) * (x - self.q.x)
+        return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir)) / dir.y
+    
+    def __lt__(self, o):
+        global sweepx
+        if type(o) is Arc:
+            return self.get_y(sweepx) < o.get_y(sweepx)
+        return self.get_y(sweepx) < o
+    
+import heapq, bisect
+
+class DelaunayTrianglation:
+    """ Reference
+        [1] Improving Worst-Case Optimal Delaunay Triangulation Algorithms. https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.56.2323
+        [2] DeWall: A fast divide and conquer Delaunay triangulation algorithm in E^d. https://www.sciencedirect.com/science/article/pii/S0010448597000821?via%3Dihub
+        The divide and conquer algorithm has been shown to be the fastest DT generation technique sequentially.
+        [3] https://codeforces.com/blog/entry/85638
+        [4] https://www2.cs.sfu.ca/~binay/813.2011/Fortune.pdf
+    """
+    def __init__(self, points):
+        self.n = len(points)
+        points = sorted(points)
+        self.points = [(points[i], i) for i in range(self.n)]
+
+        self.Q = []
+        self.edges = [] # delaunay edges
+        self.valid = [] # valid[-id] == True if the vertex event is valid
+        self.beachline = Multiset()
+        
+    
+    def update(self, item):
+        global sweepx
+        if item.i == -1: return
+        self.valid[-item.id] = False
+        a = self.beachline.prev(item)
+
+        u, v = item.q - item.p, a.p - item.p
+        if cmp(abs(u.cross(v))) == 0: return # collinear: doesn't generate a vertex event
+
+        self.ti -= 1
+        item.id = self.ti
+
+        self.valid.append(True)
+        tri = Triangle(item.p, item.q, a.p)
+        c, r = tri.circumcircle()
+        x = c.x + r
+
+        if x > sweepx - EPS and a.get_y(x) + EPS > item.get_y(x):
+            heapq.heappush(self.Q, (x, item.id, item))
+
+    def add_edge(self, i, j):
+        if i == -1 or j == -1: return
+        self.edges.append((self.points[i][1], self.points[j][1]))
+    
+    def add(self, i):
+        p = self.points[i][0]
+        c = self.beachline.lower_bound(p.y)
+        b = self.beachline.insert(Arc(p, c.p, i))
+        a = self.beachline.insert(Arc(c.p, p, c.i))
+        self.add_edge(i, c.i)
+
+        self.update(a)
+        self.update(b)
+        self.update(c)
+    
+    def remove(self, item):
+        a = self.beachline.prev(item)
+        b = self.beachline.next(item)
+        # print(item, a, b)
+        self.beachline.remove(item)
+        self.add_edge(a.i, b.i)
+        a = self.beachline.update(a, Arc(a.p, b.p, a.i))
+        
+        self.update(a)
+        self.update(b)
+
+    
+    def build(self, X = 1e9):
+        global sweepx
+        X *= 3
+
+        self.beachline.insert(Arc(Point(-X, -X), Point(-X, X), -1))
+        self.beachline.insert(Arc(Point(-X, X), Point(math.inf, math.inf), -1))
+
+        for i in range(self.n):
+            heapq.heappush(self.Q, (self.points[i][0].x, i, self.beachline.end()))
+
+        self.ti = 0
+        self.valid = [False]
+        while self.Q:
+            print(self.beachline.v)
+            e = heapq.heappop(self.Q)
+            sweepx = e[0]
+            if e[1] >= 0:
+                self.add(e[1])
+            elif self.valid[-e[1]]:
+                self.remove(e[2])
+
+
 
 def main():
     # test_points()
@@ -772,7 +936,9 @@ def main():
     # print(len(pts))
     # for x, y in pts:
     #     print(x, y)
-    test_triangle()
+    # test_triangle()
+
+    test_delaunay()
 
 def test_points():
     check(operator.lt, Point(1, 2), Point(1, 2))
@@ -1019,6 +1185,31 @@ def test_triangle():
     # ax.text(c.x, c.y, 'circumcenter', c='y') 
     # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='y', zorder=-10))
     plt.show() 
+
+
+def test_delaunay():
+    pts = [(0, 0), (1, 0), (2, 1), (1, 2), (4, 3), (3, 5), (1, 3)]
+
+    random_angle = random.random() * math.pi/60
+    pts = [Point(p).rotate(random_angle) for p in pts]
+
+    
+
+    delaunay = DelaunayTrianglation(pts)
+    delaunay.build()
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+
+    
+    ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
+
+    print(delaunay.edges)
+    for u, v in delaunay.edges:
+        a, b = pts[u], pts[v]
+        ax.plot([a.x, b.x], [a.y, b.y], color='k', zorder=-1)
+    plt.show()
 
 if __name__ == '__main__':
     main()
