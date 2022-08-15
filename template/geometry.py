@@ -1241,7 +1241,7 @@ def test_delaunay():
     ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
     for i in range(len(pts)):
         x, y = pts[i].x, pts[i].y
-        ax.text(x, y, str(i))
+        ax.text(x, y, str(i), c='c')
     for u, v in delaunay.edges:
         a, b = pts[u], pts[v]
         ax.plot([a.x, b.x], [a.y, b.y], color='k', zorder=-1)
