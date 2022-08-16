@@ -24,8 +24,51 @@ Algorithm template for online contests, available on
     - Binomial
     - Modulo Integral
       - Note: this's not faster than python big number with proper modulo operations
-- graph
+    - Prime Table
+    - Exgcd and Chinese remainder theorem
+- [graph](https://github.com/amomorning/algorithm-py/blob/master/template/graph.py)
     - dijkstra
+- [geometry](https://github.com/amomorning/algorithm-py/blob/master/template/geometry.py)
+    - Point (E^d)
+        - quaternion
+        - rotate
+        - matrix (row major)
+        - polar_cmp
+        - find_points_in_aabb
+    - Segment
+        - intersection
+        - point on segment
+        - projection of point
+        - distance to point / segment
+    - Plane
+        - projection of point / segment
+    - Matrix
+        - from translate
+        - from rotate
+        - from scale
+    - Triangle
+        - normal
+        - area
+        - bounding box
+        - centriod
+        - incircle (内心)
+        - circumcircle (外心)
+        - point in triangle
+        - uniform sample in triangle(three kinds of algorithm)
+    - Polygon
+        - is convex or not
+        - signed area / area
+        - centriod (area based)
+        - triangulation by earcut algorithm
+        - point in polygon
+    - Convex Hull
+        - 2d quick convex hull from point cloud
+    - Delaunay Trianglation
+        - Fortune algorithm (o(n log n))
+    - other
+
+- bit tricks
+    - BitSet
 
 
 ### errors and other notes
