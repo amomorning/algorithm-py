@@ -145,26 +145,26 @@ class PrimeTable:
         self.min_div = [0] * (n+1)
         self.min_div[1] = 1
 
-        mu = [0] * (n+1)
-        phi = [0] * (n+1)
-        mu[1] = 1
-        phi[1] = 1
+        self.mu = [0] * (n+1)
+        self.phi = [0] * (n+1)
+        self.mu[1] = 1
+        self.phi[1] = 1
 
         for i in range(2, n+1):
             if not self.min_div[i]:
                 self.primes.append(i)
                 self.min_div[i] = i
-                mu[i] = -1
-                phi[i] = i-1
+                self.mu[i] = -1
+                self.phi[i] = i-1
             for p in self.primes:
                 if i * p > n: break
                 self.min_div[i*p] = p
                 if i % p == 0:
-                    phi[i*p] = phi[i] * p
+                    self.phi[i*p] = self.phi[i] * p
                     break
                 else:
-                    mu[i*p] = -mu[i]
-                    phi[i*p] = phi[i] * (p - 1)
+                    self.mu[i*p] = -self.mu[i]
+                    self.phi[i*p] = self.phi[i] * (p - 1)
 
     def is_prime(self, x:int):
         if x < 2: return False
@@ -196,3 +196,45 @@ class PrimeTable:
                 for d in factors[:n]:
                     factors.append(d * (p ** j))
         return factors
+
+
+def exgcd(a, b):
+    x = [1, 0, 0, 1]
+    while b != 0:
+        c = a // b
+        x, a, b = [x[2], x[3], x[0] - x[2] * c, x[1] - x[3] * c], b, a % b
+    return a, x[0], x[1]
+
+
+def linear_diophantine(a, b, c):
+    """ Solution for ax + by = c
+        return: gcd(a, b), x, y
+    """
+    if a == 0 and b == 0: return 0, 0, 0 if c == 0 else False
+    if a == 0: return abs(b), 0, c//b if c%b == 0 else False
+    if b == 0: return abs(a), c//a, 0 if c%a == 0 else False
+    d, x, y = exgcd(a, b)
+    if c % d != 0: return False
+    dx = c // a; c -= dx * a
+    dy = c // b; c -= dy * b
+    x = dx + x * (c // d) % b
+    y = dy + y * (c // d) % a
+    return abs(d), x, y
+
+
+def linear_congruence(k1, m1, k2, m2):
+    """ Solution for x = k1(mod m1)
+                     x = k2(mod m2)			   
+        return: x, lcm(m1, m2)  (0 <= x < lcm(m1, m2))
+    """
+    k1 %= m1; k2 %= m2
+    if k1 < 0: k1 += m1
+    if k2 < 0: k2 += m2
+
+    tmp = linear_diophantine(m1, -m2, k2-k1)
+    if tmp == False: return False
+    
+    d, x, _ = tmp
+    dx = m2 // d
+    delta = x // dx - int(x % dx < 0)
+    return m1 * (x - dx * delta) + k1, m1 // d * m2
