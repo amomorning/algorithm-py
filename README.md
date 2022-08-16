@@ -67,8 +67,9 @@ Algorithm template for online contests, available on
         - Fortune algorithm (o(n log n))
     - other
 
-- bit tricks
+- (bit tricks)[https://github.com/amomorning/algorithm-py/blob/master/template/bit_tricks.ipynb]
     - BitSet
+- (list tricks)[https://github.com/amomorning/algorithm-py/blob/master/template/list_tricks.py]
 
 
 ### errors and other notes

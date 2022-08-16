@@ -135,7 +135,8 @@ class Integral:
     def __le__(self, rhs):
         if type(rhs) == Integral: rhs = rhs.v
         return self.v <= rhs
-    
+
+# prime table 
 import math
 class PrimeTable:
     def __init__(self, n:int) -> None:
@@ -198,6 +199,7 @@ class PrimeTable:
         return factors
 
 
+# chinese remainder theorem
 def exgcd(a, b):
     x = [1, 0, 0, 1]
     while b != 0:

@@ -32,3 +32,22 @@ def discretization(arr:list) -> list:
 
 # 绑定
 list(zip(a, range(len(a))))
+
+
+# 获取 ban 一些 id 后的第 k 大
+def get_kth(k, arr, ref):
+    k = k - len(ref) + 2
+
+    for x in ref:
+        if k < len(arr) and x <= arr[k][0]: k += 1
+    
+    if k >= len(arr): return math.inf
+    return arr[k][0]
+
+a = []
+ids = []
+
+arr = sorted(list(zip(a, range(len(a)))))
+ref = [a[i] for i in ids]
+k = 2
+print(get_kth(k, arr, ref))
