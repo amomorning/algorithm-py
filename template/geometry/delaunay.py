@@ -1,6 +1,82 @@
 from point import *
 from triangle import *
 
+class Iterator:
+    def __init__(self, label):
+        self.label = label
+   
+    def __lt__(self, other)-> bool:
+        return self.label < other.label
+    
+    def __eq__(self, other) -> bool:
+        return self.label == other.label
+
+    def __repr__(self):
+        return f'Iterator({self.label})'
+
+class Multiset:
+    def __init__(self):
+        self.v = []
+        self.it = 0
+
+    def update(self, iter, new_item):
+        """ o(N) """
+        self.remove(iter)
+        return self.insert(new_item)
+    
+    def get(self, iter):
+        idx = self.find(iter)
+        return self.v[idx][0]
+    
+    def find(self, iter):
+        """ o(N) """
+        for i, item in enumerate(self.v):
+            if item[1] == iter:
+                return i
+        return -1
+    
+    def remove(self, iter):
+        """ o(N) """
+        idx = self.find(iter)
+        del self.v[idx]
+
+    def insert(self, item):
+        """ o(N) """
+        iter = Iterator(self.it)
+        self.it += 1
+        bisect.insort_left(self.v, (item, iter))
+        return iter
+
+    def next(self, iter):
+        """ o(logN): return iterator"""
+        idx = self.find(iter)
+        if idx == len(self.v): return self.v[idx][1]
+        return self.v[idx+1][1]
+    
+    def prev(self, iter):
+        """ o(logN) """
+        idx = self.find(iter)
+        if idx == 0: return self.v[idx][1]
+        return self.v[idx-1][1]
+    
+    def lower_bound(self, item):
+        """ o(logN) """
+        idx = bisect.bisect_left(self.v, (item, -math.inf))
+        return self.v[idx][1]
+    
+    def end(self):
+        """ o(1) """
+        return self.v[-1][1]
+
+
+def lineline(a, b, c, d):
+    return a + (b - a) * ((c - a).cross(d - c) / (b - a).cross(d - c))
+
+def circumcenter(a, b, c):
+    b = (a + b) * 0.5
+    c = (a + c) * 0.5
+    return lineline(b, b + (b - a).rotate_90(), c, c + (c - a).rotate_90())
+
 sweepx = 0.0
 class Arc:
     def __init__(self, p, q, i, id=0):
@@ -20,16 +96,15 @@ class Arc:
         x += EPS
         mid = (self.p + self.q) * 0.5
         dir = (self.p - mid).rotate_90()
-        D = (x - self.p.x) * (x - self.q.x)
-        # dir.y += EPS
-        if cmp(dir.y) == 0: return math.nan
-        return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir)) / dir.y
+        D = (x - self.p.x) * (x - self.q.x) 
+        if cmp(dir.y) == 0: return INF/2
+        return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir) ) / dir.y
     
     def __lt__(self, o):
         global sweepx
         if type(o) is Arc:
-            return self.get_y(sweepx) < o.get_y(sweepx)
-        return self.get_y(sweepx) < o
+            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) < 0
+        return cmp(self.get_y(sweepx) - o) < 0
     
 import heapq, bisect
 
@@ -44,8 +119,9 @@ class DelaunayTrianglation:
     """
     def __init__(self, points):
         self.n = len(points)
-        random_angle = random.random() * math.pi / 233
-        points = [Point(pt).rotate(random_angle) for pt in points]
+        random_angle = random.uniform(0, math.pi*2)
+        tiny = 1e-6
+        points = [Point(pt[0] + random.uniform(-tiny, tiny), pt[1]  + random.uniform(-tiny, tiny)).rotate(random_angle) for pt in points]
         self.points = sorted([(points[i], i) for i in range(self.n)])
 
         self.Q = []
@@ -62,6 +138,8 @@ class DelaunayTrianglation:
         a = self.beachline.get(self.beachline.prev(iter))
 
         u, v = item.q - item.p, a.p - item.p
+        # print(iter)
+        # print(u.cross(v))
         if cmp(abs(u.cross(v))) == 0: return # collinear: doesn't generate a vertex event
 
         self.ti -= 1
@@ -127,3 +205,49 @@ class DelaunayTrianglation:
                 self.add(e[1])
             elif self.valid[-e[1]]:
                 self.remove(e[2])
+
+
+
+def test_delaunay():
+    pts = set()
+    # for _ in range(200):
+    #     x = random.uniform(1, 100)
+    #     y = random.uniform(1, 100)
+    #     pts.add((x, y))
+    # print(len(pts))
+    # for x, y in pts:
+    #     print(x, y)
+    # pts = [(2, 4), (10, 4), (10, 10), (3, 3), (8, 2), (4, 1)]
+    # pts = [(9, 10), (2, 1), (5, 8), (8, 10), (5, 7), (6, 3), (2, 6), (2, 5), (1, 3)]
+
+    # print(list(pts))
+
+    n = int(input())
+    for i in range(n):
+        x, y = map(float, input().split())
+        pts.add((x, y))
+
+    # do something
+    pts = [Point(pt) for pt in pts]
+    delaunay = DelaunayTrianglation(pts)
+    delaunay.build()
+    # print(delaunay.points)
+    # elapsed time
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+
+    # print(delaunay.edges)
+    ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
+    for i in range(len(pts)):
+        x, y = pts[i].x, pts[i].y
+        ax.text(x, y, str(i), c='c')
+    for u, v in delaunay.edges:
+        a, b = pts[u], pts[v]
+        ax.plot([a.x, b.x], [a.y, b.y], color='k', zorder=-1)
+    plt.show()
+
+
+if __name__ == '__main__':
+    test_delaunay()
