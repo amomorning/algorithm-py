@@ -390,3 +390,194 @@ class SortedList:
         return 'SortedList({0})'.format(list(self))
 
 
+import bisect
+label_counter_ = 0 
+class Iterator:
+    def __init__(self, label = None):
+        if label is None:
+            global label_counter_
+            self.label = label_counter_
+            label_counter_ += 1
+        else: self.label = label
+   
+    def __lt__(self, other)-> bool:
+        return self.label < other.label
+    
+    def __eq__(self, other) -> bool:
+        return self.label == other.label
+
+    def __repr__(self):
+        return f'Iterator({self.label})'
+    
+    def __hash__(self):
+        return hash(self.label)
+
+
+class SortedBlock:
+    def __init__(self):
+        self.data_ = list()
+        self.iterator_set_ = dict()
+    
+    def __repr__(self):
+        return str(self.data_) + '; ' + str(self.iterator_set_)
+    
+    def add(self, item, iter):
+        self.iterator_set_[iter] = 1
+        bisect.insort_left(self.data_, (item, iter))
+    
+    def delete(self, iter):
+        if not self.contains(iter): return False
+        self.iterator_set_[iter] = 0
+        for i in range(0, len(self.data_)):
+            if self.data_[i][1] == iter:
+                del self.data_[i]
+                return True
+        assert False
+    
+    def contains(self, iter):
+        if iter in self.iterator_set_: 
+            return bool(self.iterator_set_[iter])
+        return False
+
+    def access(self, iter):
+        for item, it in self.data_:
+            if it == iter: return item
+
+    @property
+    def smallest_elem(self):
+        return self.data_[0][0]
+    
+    @property
+    def smallest_elem_iter(self):
+        return self.data_[0][1]
+
+    @property
+    def largest_elem(self):
+        return self.data_[-1][0]
+
+    @property
+    def largest_elem_iter(self):
+        return self.data_[-1][1]
+    
+    def __len__(self):
+        return len(self.data_)
+    
+    def size(self):
+        return len(self.data_)
+    
+    def empty(self):
+        return len(self) == 0
+    
+    def next(self, iter):
+        for i in range(len(self)):
+            if self.data_[i][1] == iter:
+                return self.data_[i+1][1]
+    
+    def prev(self, iter):
+        for i in range(len(self)):
+            if self.data_[i][1] == iter:
+                return self.data_[i-1][1]
+
+
+    def push_back(self, item, iter):
+        self.data_.append((item, iter))
+
+    def pop_tail(self, size):
+        tail = SortedBlock()
+        for i in range(-size, 0):
+            item, iter = self.data_[i]
+            tail.push_back(item, iter)
+            del self.iterator_set_[iter]
+            # self.iterator_set_[iter] = 0
+            tail.iterator_set_[iter] = 1
+        self.data_ = self.data_[:-size]
+        return tail
+    
+    def lower_bound(self, item):
+        i = len(self.data_)
+        while i > 0 and item <= self.data_[i-1][0]:
+            i -= 1
+        return self.data_[i][1]
+    
+    def upper_bound(self, item):
+        i = len(self.data_)
+        while i > 0 and item < self.data_[i-1][0]:
+            i -= 1
+        return self.data_[i][1]
+
+
+# sorted block list
+MAX_BLOCK_SIZE = 4
+HALF_MAX_BLOCK_SIZE = (MAX_BLOCK_SIZE + 1) // 2
+
+class SortedBlockList:
+    def __init__(self):
+        self.blocks_ = []
+        self.end_ = Iterator()
+    
+    
+    def adjust(self, i):
+        while self.blocks_[i].size() >= MAX_BLOCK_SIZE:
+            self.blocks_.insert(i+1, self.blocks_[i].pop_tail(HALF_MAX_BLOCK_SIZE))
+        if self.blocks_[i].empty():
+            del self.blocks_[i]
+
+    def add(self, elem, iter = None):
+        if iter is None: iter = Iterator()
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem < elem:
+            i += 1
+        if i == len(self.blocks_): 
+            if len(self.blocks_) == 0: self.blocks_.append(SortedBlock())
+            else: i -= 1
+        self.blocks_[i].add(elem, iter)
+        self.adjust(i)
+    
+    def delete(self, iter):
+        i = 0
+        while i < len(self.blocks_) and not self.blocks_[i].delete(iter):
+            i += 1
+        self.adjust(i)
+    
+    def access(self, iter):
+        for i in range(len(self.blocks_)):
+            if self.blocks_[i].contains(iter):
+                return self.blocks_[i].access(iter)
+        
+    def begin(self):
+        if len(self.blocks_) == 0: return self.end_
+        return self.blocks_[0].smallest_elem_iter
+    
+    def end(self):
+        return self.end_
+    
+    def prev(self, iter):
+        i = len(self.blocks_)
+        while i > 0 and not self.blocks_[i-1].contains(iter):
+            i -= 1
+        if iter == self.blocks_[i].smallest_elem_iter:
+            return self.blocks_[i-1].largest_elem_iter
+        return self.blocks_[i].prev(iter)
+    
+    def next(self, iter):
+        i = 0
+        while i < len(self.blocks_) and not self.blocks_[i].contains(iter):
+            i += 1
+        if iter == self.blocks_[i].largest_elem_iter:
+            if i == len(self.blocks_) - 1: return self.end_
+            return self.blocks_[i+1].smallest_elem_iter
+        return self.blocks_[i].next(iter)
+    
+    def lower_bound(self, elem):
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem < elem:
+            i += 1
+        if i == len(self.blocks_): return self.end_
+        return self.blocks_[i].lower_bound(elem)
+    
+    def upper_bound(self, elem):
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem <= elem:
+            i += 1
+        if i == len(self.blocks_): return self.end_
+        return self.blocks_[i].upper_bound(elem)

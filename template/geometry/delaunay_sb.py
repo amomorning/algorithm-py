@@ -1,247 +1,198 @@
-from functools import cmp_to_key
 from point import *
 from triangle import *
-import heapq
 
-class SortedList:
-    def __init__(self, iterable=[], _load=200):
-        """Initialize sorted list instance."""
-        values = sorted(iterable)
-        self._len = _len = len(values)
-        self._load = _load
-        self._lists = _lists = [values[i:i + _load] for i in range(0, _len, _load)]
-        self._list_lens = [len(_list) for _list in _lists]
-        self._mins = [_list[0] for _list in _lists]
-        self._fen_tree = []
-        self._rebuild = True
-
-    def _fen_build(self):
-        """Build a fenwick tree instance."""
-        self._fen_tree[:] = self._list_lens
-        _fen_tree = self._fen_tree
-        for i in range(len(_fen_tree)):
-            if i | i + 1 < len(_fen_tree):
-                _fen_tree[i | i + 1] += _fen_tree[i]
-        self._rebuild = False
-
-    def _fen_update(self, index, value):
-        """Update `fen_tree[index] += value`."""
-        if not self._rebuild:
-            _fen_tree = self._fen_tree
-            while index < len(_fen_tree):
-                _fen_tree[index] += value
-                index |= index + 1
-
-    def _fen_query(self, end):
-        """Return `sum(_fen_tree[:end])`."""
-        if self._rebuild:
-            self._fen_build()
-
-        _fen_tree = self._fen_tree
-        x = 0
-        while end:
-            x += _fen_tree[end - 1]
-            end &= end - 1
-        return x
-
-    def _fen_findkth(self, k):
-        """Return a pair of (the largest `idx` such that `sum(_fen_tree[:idx]) <= k`, `k - sum(_fen_tree[:idx])`)."""
-        _list_lens = self._list_lens
-        if k < _list_lens[0]:
-            return 0, k
-        if k >= self._len - _list_lens[-1]:
-            return len(_list_lens) - 1, k + _list_lens[-1] - self._len
-        if self._rebuild:
-            self._fen_build()
-
-        _fen_tree = self._fen_tree
-        idx = -1
-        for d in reversed(range(len(_fen_tree).bit_length())):
-            right_idx = idx + (1 << d)
-            if right_idx < len(_fen_tree) and k >= _fen_tree[right_idx]:
-                idx = right_idx
-                k -= _fen_tree[idx]
-        return idx + 1, k
-
-    def _delete(self, pos, idx):
-        """Delete value at the given `(pos, idx)`."""
-        _lists = self._lists
-        _mins = self._mins
-        _list_lens = self._list_lens
-
-        self._len -= 1
-        self._fen_update(pos, -1)
-        del _lists[pos][idx]
-        _list_lens[pos] -= 1
-
-        if _list_lens[pos]:
-            _mins[pos] = _lists[pos][0]
-        else:
-            del _lists[pos]
-            del _list_lens[pos]
-            del _mins[pos]
-            self._rebuild = True
-
-    def _loc_left(self, value):
-        """Return an index pair that corresponds to the first position of `value` in the sorted list."""
-        if not self._len:
-            return 0, 0
-
-        _lists = self._lists
-        _mins = self._mins
-
-        lo, pos = -1, len(_lists) - 1
-        while lo + 1 < pos:
-            mi = (lo + pos) >> 1
-            if value <= _mins[mi]:
-                pos = mi
-            else:
-                lo = mi
-
-        if pos and value <= _lists[pos - 1][-1]:
-            pos -= 1
-
-        _list = _lists[pos]
-        lo, idx = -1, len(_list)
-        while lo + 1 < idx:
-            mi = (lo + idx) >> 1
-            if value <= _list[mi]:
-                idx = mi
-            else:
-                lo = mi
-
-        return pos, idx
-
-    def _loc_right(self, value):
-        """Return an index pair that corresponds to the last position of `value` in the sorted list."""
-        if not self._len:
-            return 0, 0
-
-        _lists = self._lists
-        _mins = self._mins
-
-        pos, hi = 0, len(_lists)
-        while pos + 1 < hi:
-            mi = (pos + hi) >> 1
-            if value < _mins[mi]:
-                hi = mi
-            else:
-                pos = mi
-
-        _list = _lists[pos]
-        lo, idx = -1, len(_list)
-        while lo + 1 < idx:
-            mi = (lo + idx) >> 1
-            if value < _list[mi]:
-                idx = mi
-            else:
-                lo = mi
-
-        return pos, idx
-
-    def add(self, value):
-        """Add `value` to sorted list."""
-        _load = self._load
-        _lists = self._lists
-        _mins = self._mins
-        _list_lens = self._list_lens
-
-        self._len += 1
-        if _lists:
-            pos, idx = self._loc_right(value)
-            self._fen_update(pos, 1)
-            _list = _lists[pos]
-            _list.insert(idx, value)
-            _list_lens[pos] += 1
-            _mins[pos] = _list[0]
-            if _load + _load < len(_list):
-                _lists.insert(pos + 1, _list[_load:])
-                _list_lens.insert(pos + 1, len(_list) - _load)
-                _mins.insert(pos + 1, _list[_load])
-                _list_lens[pos] = _load
-                del _list[_load:]
-                self._rebuild = True
-        else:
-            _lists.append([value])
-            _mins.append(value)
-            _list_lens.append(1)
-            self._rebuild = True
-
-    def discard(self, value):
-        """Remove `value` from sorted list if it is a member."""
-        _lists = self._lists
-        if _lists:
-            pos, idx = self._loc_right(value)
-            if idx and _lists[pos][idx - 1] == value:
-                self._delete(pos, idx - 1)
-
-    def remove(self, value):
-        """Remove `value` from sorted list; `value` must be a member."""
-        _len = self._len
-        self.discard(value)
-        if _len == self._len:
-            raise ValueError('{0!r} not in list'.format(value))
-
-    def pop(self, index=-1):
-        """Remove and return value at `index` in sorted list."""
-        pos, idx = self._fen_findkth(self._len + index if index < 0 else index)
-        value = self._lists[pos][idx]
-        self._delete(pos, idx)
-        return value
-
-    def bisect_left(self, value):
-        """Return the first index to insert `value` in the sorted list."""
-        pos, idx = self._loc_left(value)
-        return self._fen_query(pos) + idx
-
-    def bisect_right(self, value):
-        """Return the last index to insert `value` in the sorted list."""
-        pos, idx = self._loc_right(value)
-        return self._fen_query(pos) + idx
-
-    def count(self, value):
-        """Return number of occurrences of `value` in the sorted list."""
-        return self.bisect_right(value) - self.bisect_left(value)
-
-    def __len__(self):
-        """Return the size of the sorted list."""
-        return self._len
-
-    def __getitem__(self, index):
-        """Lookup value at `index` in sorted list."""
-        pos, idx = self._fen_findkth(self._len + index if index < 0 else index)
-        return self._lists[pos][idx]
-
-    def __delitem__(self, index):
-        """Remove value at `index` from sorted list."""
-        pos, idx = self._fen_findkth(self._len + index if index < 0 else index)
-        self._delete(pos, idx)
-
-    def __contains__(self, value):
-        """Return true if `value` is an element of the sorted list."""
-        _lists = self._lists
-        if _lists:
-            pos, idx = self._loc_left(value)
-            return idx < len(_lists[pos]) and _lists[pos][idx] == value
-        return False
-
-    def __iter__(self):
-        """Return an iterator over the sorted list."""
-        return (value for _list in self._lists for value in _list)
-
-    def __reversed__(self):
-        """Return a reverse iterator over the sorted list."""
-        return (value for _list in reversed(self._lists) for value in reversed(_list))
+import bisect
+label_counter_ = 0 
+class Iterator:
+    def __init__(self, label = None):
+        if label is None:
+            global label_counter_
+            self.label = label_counter_
+            label_counter_ += 1
+        else: self.label = label
+   
+    def __lt__(self, other)-> bool:
+        return self.label < other.label
+    
+    def __eq__(self, other) -> bool:
+        return self.label == other.label
 
     def __repr__(self):
-        """Return string representation of sorted list."""
-        return 'SortedList({0})'.format(list(self))
+        return f'Iterator({self.label})'
+    
+    def __hash__(self):
+        return hash(self.label)
 
-tot_arc = 0
-def generate_unique_id():
-    global tot_arc
-    tot_arc += 1
-    return tot_arc
+
+class SortedBlock:
+    def __init__(self):
+        self.data_ = list()
+        self.iterator_set_ = dict()
+    
+    def __repr__(self):
+        return str(self.data_) + '; ' + str(self.iterator_set_)
+    
+    def add(self, item, iter):
+        self.iterator_set_[iter] = 1
+        bisect.insort_left(self.data_, (item, iter))
+    
+    def delete(self, iter):
+        if not self.contains(iter): return False
+        self.iterator_set_[iter] = 0
+        for i in range(0, len(self.data_)):
+            if self.data_[i][1] == iter:
+                del self.data_[i]
+                return True
+        assert False
+    
+    def contains(self, iter):
+        if iter in self.iterator_set_: 
+            return bool(self.iterator_set_[iter])
+        return False
+
+    def access(self, iter):
+        for item, it in self.data_:
+            if it == iter: return item
+
+    @property
+    def smallest_elem(self):
+        return self.data_[0][0]
+    
+    @property
+    def smallest_elem_iter(self):
+        return self.data_[0][1]
+
+    @property
+    def largest_elem(self):
+        return self.data_[-1][0]
+
+    @property
+    def largest_elem_iter(self):
+        return self.data_[-1][1]
+    
+    def __len__(self):
+        return len(self.data_)
+    
+    def size(self):
+        return len(self.data_)
+    
+    def empty(self):
+        return len(self) == 0
+    
+    def next(self, iter):
+        for i in range(len(self)):
+            if self.data_[i][1] == iter:
+                return self.data_[i+1][1]
+    
+    def prev(self, iter):
+        for i in range(len(self)):
+            if self.data_[i][1] == iter:
+                return self.data_[i-1][1]
+
+
+    def push_back(self, item, iter):
+        self.data_.append((item, iter))
+
+    def pop_tail(self, size):
+        tail = SortedBlock()
+        for i in range(-size, 0):
+            item, iter = self.data_[i]
+            tail.push_back(item, iter)
+            del self.iterator_set_[iter]
+            # self.iterator_set_[iter] = 0
+            tail.iterator_set_[iter] = 1
+        self.data_ = self.data_[:-size]
+        return tail
+    
+    def lower_bound(self, item):
+        i = len(self.data_)
+        while i > 0 and item <= self.data_[i-1][0]:
+            i -= 1
+        return self.data_[i][1]
+    
+    def upper_bound(self, item):
+        i = len(self.data_)
+        while i > 0 and item < self.data_[i-1][0]:
+            i -= 1
+        return self.data_[i][1]
+
+
+MAX_BLOCK_SIZE = 100
+HALF_MAX_BLOCK_SIZE = (MAX_BLOCK_SIZE + 1) // 2
+
+class SortedBlockList:
+    def __init__(self):
+        self.blocks_ = []
+        self.end_ = Iterator()
+    
+    
+    def adjust(self, i):
+        while self.blocks_[i].size() >= MAX_BLOCK_SIZE:
+            self.blocks_.insert(i+1, self.blocks_[i].pop_tail(HALF_MAX_BLOCK_SIZE))
+        if self.blocks_[i].empty():
+            del self.blocks_[i]
+
+    def add(self, elem, iter = None):
+        if iter is None: iter = Iterator()
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem < elem:
+            i += 1
+        if i == len(self.blocks_): 
+            if len(self.blocks_) == 0: self.blocks_.append(SortedBlock())
+            else: i -= 1
+        self.blocks_[i].add(elem, iter)
+        self.adjust(i)
+        return iter
+    
+    def delete(self, iter):
+        i = 0
+        while i < len(self.blocks_) and not self.blocks_[i].delete(iter):
+            i += 1
+        self.adjust(i)
+    
+    def access(self, iter):
+        for i in range(len(self.blocks_)):
+            if self.blocks_[i].contains(iter):
+                return self.blocks_[i].access(iter)
+        
+    def begin(self):
+        if len(self.blocks_) == 0: return self.end_
+        return self.blocks_[0].smallest_elem_iter
+    
+    def end(self):
+        return self.end_
+    
+    def prev(self, iter):
+        i = len(self.blocks_)
+        while i > 0 and not self.blocks_[i-1].contains(iter):
+            i -= 1
+        if i == len(self.blocks_): i -= 1
+        if iter == self.blocks_[i].smallest_elem_iter:
+            return self.blocks_[i-1].largest_elem_iter
+        return self.blocks_[i].prev(iter)
+    
+    def next(self, iter):
+        i = 0
+        while i < len(self.blocks_) and not self.blocks_[i].contains(iter):
+            i += 1
+        if iter == self.blocks_[i].largest_elem_iter:
+            if i == len(self.blocks_) - 1: return self.end_
+            return self.blocks_[i+1].smallest_elem_iter
+        return self.blocks_[i].next(iter)
+    
+    def lower_bound(self, elem):
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem < elem:
+            i += 1
+        if i == len(self.blocks_): return self.end_
+        return self.blocks_[i].lower_bound(elem)
+    
+    def upper_bound(self, elem):
+        i = 0
+        while i < len(self.blocks_) and self.blocks_[i].largest_elem <= elem:
+            i += 1
+        if i == len(self.blocks_): return self.end_
+        return self.blocks_[i].upper_bound(elem)
 
 
 sweepx = 0.0
@@ -251,54 +202,42 @@ class Arc:
         self.q = q
         self.i = i
         self.id = id
-        self.unique = generate_unique_id()
     
     def __str__(self):
-        return f'Arc({self.p}, {self.q}, {self.i}, {self.id}, {self.unique})'
+        return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
     
     def __repr__(self):
-        return f'Arc({self.p}, {self.q}, {self.i}, {self.id}, {self.unique})'
+        return f'Arc({self.p}, {self.q}, {self.i}, {self.id})'
     
     def get_y(self, x):
         if self.q.y == INF: return INF
         x += EPS
         mid = (self.p + self.q) * 0.5
         dir = (self.p - mid).rotate_90()
-        D = (x - self.p.x) * (x - self.q.x)
+        D = (x - self.p.x) * (x - self.q.x) 
         if cmp(dir.y) == 0: return INF/2
-        return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir)) / dir.y
+        return mid.y + ((mid.x - x) * dir.x + math.sqrt(D) * abs(dir) ) / dir.y
     
     def __eq__(self, o):
-        return self.unique == o.unique
-    
+        global sweepx
+        if type(o) is Arc:
+            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) == 0
+        return cmp(self.get_y(sweepx) - o) == 0    
+
     def __lt__(self, o):
         global sweepx
         if type(o) is Arc:
             return cmp(self.get_y(sweepx) - o.get_y(sweepx)) < 0
         return cmp(self.get_y(sweepx) - o) < 0
-        
-    def __le__(self, o):
-        global sweepx
-        if type(o) is Arc:
-            if cmp(self.get_y(sweepx) - o.get_y(sweepx)) == 0:
-                return self.unique <= o.unique
-            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) < 0
-        return cmp(self.get_y(sweepx) - o) <= 0
-     
-    def __gt__(self, o):
-        global sweepx
-        if type(o) is Arc:
-            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) > 0
-        return cmp(self.get_y(sweepx) - o) > 0
 
     def __ge__(self, o):
         global sweepx
         if type(o) is Arc:
-            if cmp(self.get_y(sweepx) - o.get_y(sweepx)) == 0:
-                return self.unique >= o.unique
-            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) > 0
-        
-        return cmp(self.get_y(sweepx) - o) >= 0
+            return cmp(self.get_y(sweepx) - o.get_y(sweepx)) >= 0
+        return cmp(self.get_y(sweepx) - o) >= 0 
+    
+import heapq, bisect
+
 
 class DelaunayTrianglation:
     """ Reference
@@ -310,25 +249,28 @@ class DelaunayTrianglation:
     """
     def __init__(self, points):
         self.n = len(points)
-        random_angle = random.random() * math.pi / 233
-        points = [Point(pt).rotate(random_angle) for pt in points]
+        random_angle = random.uniform(0, math.pi*2)
+        tiny = 1e-6
+        points = [Point(pt[0] + random.uniform(-tiny, tiny), pt[1]  + random.uniform(-tiny, tiny)).rotate(random_angle) for pt in points]
         self.points = sorted([(points[i], i) for i in range(self.n)])
 
         self.Q = []
         self.edges = [] # delaunay edges
         self.valid = [] # valid[-id] == True if the vertex event is valid
-        self.beachline = SortedList()
+        self.beachline = SortedBlockList()
         
     
-    def update(self, item):
+    def update(self, iter):
         global sweepx
-
+        item = self.beachline.access(iter)
         if item.i == -1: return
         self.valid[-item.id] = False
-        idx = self.beachline.bisect_left(item)
-        a = self.beachline[idx - 1]
-
+        a = self.beachline.access(self.beachline.prev(iter))
+        
+        # print(self.beachline.blocks_)
         u, v = item.q - item.p, a.p - item.p
+        # print(iter)
+        # print(u.cross(v))
         if cmp(abs(u.cross(v))) == 0: return # collinear: doesn't generate a vertex event
 
         self.ti -= 1
@@ -340,7 +282,7 @@ class DelaunayTrianglation:
         c, r = tri.circumcircle()
         x = c.x + r
         if cmp(x - sweepx) >= 0 and cmp(a.get_y(x) - item.get_y(x)) >= 0:
-            heapq.heappush(self.Q, (x, item.id, item))
+            heapq.heappush(self.Q, (x, item.id, iter))
 
     def add_edge(self, i, j):
         if i == -1 or j == -1: return
@@ -349,32 +291,27 @@ class DelaunayTrianglation:
     def add(self, i):
         p = self.points[i][0]
         # find arc to split
-        c = self.beachline[self.beachline.bisect_left(p.y)]
-        b = Arc(p, c.p, i)
-        a = Arc(c.p, p, c.i)
-        self.beachline.add(a); self.beachline.add(b)
-
-        self.add_edge(i, c.i)
+        c = self.beachline.lower_bound(p.y)
+        c_obj = self.beachline.access(c)
+        b = self.beachline.add(Arc(p, c_obj.p, i))
+        a = self.beachline.add(Arc(c_obj.p, p, c_obj.i))
+        self.add_edge(i, c_obj.i)
 
         self.update(a)
         self.update(b)
         self.update(c)
     
-    def remove(self, item):
+    def remove(self, iter):
         global sweepx
-        a = self.beachline.pop(self.beachline.bisect_left(item) - 1)
+        a = self.beachline.prev(iter)
+        b = self.beachline.next(iter)
+        self.beachline.delete(iter)
 
-        idx = self.beachline.bisect_left(item)
-        if idx >= len(self.beachline) - 2: idx = len(self.beachline) - 2
-        b = self.beachline[idx + 1]
-
-        print(self.beachline)
-        print([ix.get_y(sweepx) for ix in self.beachline])
-        self.beachline.remove(item)
-
-        a = Arc(a.p, b.p, a.i, a.id)
-        self.beachline.add(a)
-        self.add_edge(a.i, b.i)
+        a_obj = self.beachline.access(a)
+        b_obj = self.beachline.access(b)
+        self.beachline.delete(a)
+        a = self.beachline.add(Arc(a_obj.p, b_obj.p, a_obj.i, a_obj.id))
+        self.add_edge(a_obj.i, b_obj.i)
 
         self.update(a)
         self.update(b)
@@ -388,7 +325,7 @@ class DelaunayTrianglation:
         self.beachline.add(Arc(Point(-X, X), Point(INF, INF), -1))
 
         for i in range(self.n):
-            heapq.heappush(self.Q, (self.points[i][0].x, i, self.beachline[-1]))
+            heapq.heappush(self.Q, (self.points[i][0].x, i, self.beachline.end()))
 
         self.ti = 0
         self.valid = [False]
@@ -401,34 +338,41 @@ class DelaunayTrianglation:
             elif self.valid[-e[1]]:
                 self.remove(e[2])
 
+
+
 def test_delaunay():
-    # pts = [(3, 5), (2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
-    # pts = [(0, 0), (1, -1), (3, 1), (1.5, 2), (4, 3), (3, 5), (1, 3)]
-    pts = [(0, 0), (1, -1), (1.5, 2), (3, 1), (4, 3)]#, (3, 5), (1, 3)]
-    # pts = set()
-    # for _ in range(200):
-    #     x = random.randint(1, 1000)
-    #     y = random.randint(1, 1000)
-    #     pts.add((x, y))
+    pts = set()
+    for _ in range(1000):
+        x = random.uniform(1, 100)
+        y = random.uniform(1, 100)
+        pts.add((x, y))
+    # print(len(pts))
+    # for x, y in pts:
+    #     print(x, y)
     # pts = [(2, 4), (10, 4), (10, 10), (3, 3), (8, 2), (4, 1)]
     # pts = [(9, 10), (2, 1), (5, 8), (8, 10), (5, 7), (6, 3), (2, 6), (2, 5), (1, 3)]
 
-    print(list(pts))
-    print(len(pts))
-    for x, y in pts:
-        print(x, y)
-    
-    
+    # print(list(pts))
+
+    # n = int(input())
+    # for i in range(n):
+    #     x, y = map(float, input().split())
+    #     pts.add((x, y))
+    import timeit
+    start = timeit.default_timer()
     pts = [Point(pt) for pt in pts]
     delaunay = DelaunayTrianglation(pts)
     delaunay.build()
-    print(delaunay.points)
+    # print(delaunay.points)
+    # elapsed time
+    elapsed = (timeit.default_timer() - start)
+    print(elapsed)
 
     import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(6, 4))
+    fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
 
-    print(delaunay.edges)
+    # print(delaunay.edges)
     ax.scatter([p.x for p in pts], [p.y for p in pts], c='r')
     for i in range(len(pts)):
         x, y = pts[i].x, pts[i].y
