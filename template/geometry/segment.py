@@ -21,7 +21,7 @@ class Segment:
     def on_point(self, point):
         if type(point) != Point: point = Point(point)
         u, v = self.a-point, self.b-point
-        return abs(u.cross(v)) == 0 and u.dot(v) <= 0
+        return cmp(u.cross(v)) == 0 and cmp(u.dot(v)) <= 0
     
     def lerp(self, t):
         return (1 - t) * self.a + t * self.b

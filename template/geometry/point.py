@@ -1,6 +1,6 @@
 import bisect, math
 
-EPS = 1e-12
+EPS = 1e-6
 INF = 1e100
 def cmp(x): return -1 if x < -EPS else int(x > EPS)
 
