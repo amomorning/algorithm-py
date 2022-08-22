@@ -172,6 +172,27 @@ class Polygon:
                 pts.append(seg.lerp(t))
         return pts
     
+    def divide_by_ray(self, n, center=None):
+        if center is None: center = self.centroid()
+        radius = 0
+        pts = []
+        for p in self.points:
+            radius = max(radius, (p-center).norm())
+        for i in range(n):
+            angle = 2 * i * math.pi / n
+            x, y = radius * math.cos(angle), radius * math.sin(angle)
+            ray = Segment(center, center+Point(x, y))
+            mn = math.inf
+            for seg in self.segments:
+                p = seg.intersection(ray)
+                if p is None: continue
+                if (p - center).norm() < mn:
+                    mn = (p - center).norm()
+                    mnp = p
+            pts.append(mnp)
+        return pts
+
+    
 
 def test_polygon_centroid():
     # pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
@@ -208,13 +229,23 @@ def test_polygon_divide():
 
     print(ply.length)
     N = 20
-    divs = ply.divide_by_distance(ply.length/N)
-
-    for p0, p1 in zip(divs, divs[1:]):
-        print((p0-p1).norm())
+    # divs = ply.divide_by_distance(ply.length/N)
+    divs = ply.divide_by_ray(N)
+    
     import matplotlib.pyplot as plt
-    fig = plt.figure(figsize=(5, 10))
+    fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
+
+    c = ply.centroid()
+    r = 0
+    for p in ply.points:
+        r = max(r, (p-c).norm())
+    for i in range(N):
+        angle = 2*i*math.pi/N
+        x, y = r*math.cos(angle), r*math.sin(angle)
+        ax.plot([c.x, c.x+x], [c.y, c.y+y], c='r')
+
+
 
     for seg in ply.segments:
         a, b = seg.a, seg.b
@@ -224,7 +255,7 @@ def test_polygon_divide():
         x, y = divs[i]
         ax.text(x, y, str(i), c='k')
         
-    ax.scatter([p.x for p in divs], [p.y for p in divs], c='r')
+    ax.scatter([p.x for p in divs], [p.y for p in divs], c='b', zorder=10)
     plt.show()
 
 if __name__ == '__main__':
