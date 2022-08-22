@@ -1,5 +1,4 @@
-from segment import Segment
-
+import segment
 class Plane:
     def __init__(self, base, normal):
         self.base = base
@@ -13,7 +12,7 @@ class Plane:
     def project_segment(self, segment):
         a = self.project_point(segment.a)
         b = self.project_point(segment.b)
-        return Segment(a, b)
+        return segment.Segment(a, b)
     
     def to_plane(self, plane):
         move = self.base - plane.base

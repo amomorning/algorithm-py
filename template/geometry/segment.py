@@ -14,6 +14,7 @@ class Segment:
     def __str__(self) -> str:
         return 'Line: [' + str(self.a) + ', ' + str(self.b) + ']'
 
+    @property
     def length(self):
         return abs(self.a - self.b)
 

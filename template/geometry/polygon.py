@@ -2,6 +2,33 @@ from point import *
 from segment import Segment
 from triangle import Triangle
 
+import collections, math, bisect, heapq, random, functools, itertools, copy, typing
+import platform; LOCAL = (platform.uname().node == 'AMO')
+
+
+import sys; input = lambda: sys.stdin.readline().rstrip("\r\n")
+inp = lambda : list(map(int, input().split()))
+
+def debug(*args):
+    if LOCAL:
+        print('\033[92m', end='')
+        printf(*args)
+        print('\033[0m', end='')
+
+def printf(*args):
+    if LOCAL:
+        print('>>>: ', end='')
+    for arg in args:
+        if isinstance(arg, typing.Iterable) and \
+                not isinstance(arg, str) and \
+                not isinstance(arg, dict):
+            print(' '.join(map(str, arg)), end=' ')
+        else:
+            print(arg, end=' ')
+    print()
+
+    
+
 class Polygon:
     """ 2D Polygon Implementation
     """
@@ -65,6 +92,9 @@ class Polygon:
         if not doubled: A /= 2
         return self.A
 
+    @property
+    def length(self):
+        return sum([seg.length for seg in self.segments])
     
     def area(self, doubled = False):
         self.__area = 0
@@ -130,3 +160,73 @@ class Polygon:
             if cmp((a - p).cross(b - p)) < 0 and cmp(a.y - p.y) < 0 and cmp(p.y - b.y) <= 0:
                 t += 1
         return bool(t & 1)
+
+    def divide_by_distance(self, distance):
+        remain = 0
+        pts = []
+        for seg in self.segments:
+            remain += seg.length
+            while cmp(remain - distance) >= 0:
+                remain -= distance
+                t = (seg.length - remain) / seg.length
+                pts.append(seg.lerp(t))
+        return pts
+    
+
+def test_polygon_centroid():
+    # pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
+    # pts = [(0, 0), (5, 0), (5, 8), (4, 8), (4, 5), (0, 5)]
+    pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
+    ply = Polygon(pts)
+
+    printf(ply.area())
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')
+
+    tri_pt = [tri.centroid for tri in ply.triangles]
+    ax.scatter([p[0] for p in tri_pt],[p[1] for p in tri_pt], c='b')
+
+    center = sum(ply.points, Point(0, 0))/len(ply.points)
+    ax.scatter(center[0], center[1], c='r')
+    ax.text(center[0], center[1], 'average', c='r')
+
+    b = ply.centroid()
+    ax.scatter(b[0], b[1], c='y')
+    ax.text(b[0], b[1],'centroid', c='y')
+
+    plt.show()
+
+def test_polygon_divide():
+    pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
+    ply = Polygon(pts)
+
+    print(ply.length)
+    N = 20
+    divs = ply.divide_by_distance(ply.length/N)
+
+    for p0, p1 in zip(divs, divs[1:]):
+        print((p0-p1).norm())
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(5, 10))
+    ax = fig.add_subplot(111)
+
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')    
+    
+    for i in range(len(divs)):
+        x, y = divs[i]
+        ax.text(x, y, str(i), c='k')
+        
+    ax.scatter([p.x for p in divs], [p.y for p in divs], c='r')
+    plt.show()
+
+if __name__ == '__main__':
+    # test_polygon_centroid()
+    test_polygon_divide()
