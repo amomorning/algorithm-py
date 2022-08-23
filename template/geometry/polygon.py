@@ -70,14 +70,29 @@ class Polygon:
 
     @property
     def is_convex(self):
-        if self.__convex is not None: 
+        if self.__convex is not None:
             return self.__convex
-        
+
         self.__convex = True
         for p0, p1, p2 in zip(self.points, self.points[1:], self.points[2:]):
             if (p1 - p0).cross(p2 - p0) < 0:
                 self.__convex = False
         return self.__convex
+
+    @property
+    def angles(self):
+        angles = []
+        n = len(self.points)
+        for i in range(n):
+            p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
+            a, b, c = p1 - p0, p2 - p0, p1 - p2
+            # print(abs(a), abs(b))
+            # print((a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b))
+            angle = math.acos((a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b)/2)
+            if b.cross(a) < 0:
+                angle = math.pi * 2 - angle
+            angles.append(angle)
+        return angles
 
     @property
     def segments(self):
@@ -92,7 +107,7 @@ class Polygon:
             p0 = self.points[0]
             for p1, p2 in zip(self.points[1:], self.points[2:]):
                 tris.append(Triangle(p0, p1, p2))
-        else:     
+        else:
             trids = self.earcut()
             for a, b, c in trids:
                 tris.append(Triangle(self.points[a], self.points[b], self.points[c]))
@@ -102,15 +117,14 @@ class Polygon:
     def length(self):
         return sum([seg.length for seg in self.segments])
 
-
-    def signed_area(self, double = True):
+    def signed_area(self, double=True):
         A = 0
         p0 = self.points[0]
         for p1, p2 in zip(self.points[1:], self.points[2:]):
             A += (p1 - p0).cross(p2 - p0)
         return A
 
-    def area(self, doubled = False):
+    def area(self, doubled=False):
         self.A = 0
         for tri in self.triangles:
             self.A += tri.area(True)
@@ -168,7 +182,7 @@ class Polygon:
         t = 0
         for seg in self.segments:
             if seg.on_point(p):
-                return boundary 
+                return boundary
             a, b = seg[0], seg[1]
             if cmp(a.y - b.y) > 0: a, b = b, a
             if cmp((a - p).cross(b - p)) < 0 and cmp(a.y - p.y) < 0 and cmp(p.y - b.y) <= 0:
@@ -205,6 +219,22 @@ class Polygon:
                     mnp = p
             pts.append(mnp)
         return pts
+
+    def offset(self, distance):
+        n = len(self.points)
+        pts = []
+        for i in range(n):
+            p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
+            p, q = (p1-p0)/abs(p1-p0), (p2-p0)/abs(p2-p0)
+
+            r = distance / math.sin(self.angles[i]/2)
+            if q.cross(p) < 0:
+                r = -r
+            d = -(p+q).normalized() * r
+            pts.append(p0 + d)
+        return pts
+
+
 
 
 def test_polygon_centroid():
@@ -313,7 +343,50 @@ def test_polygon():
     plt.show()
 
 
+def test_angle():
+    pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
+    ply = Polygon(pts)
+    print(ply.angles)
+    print(math.pi / 2)
+
+def test_offset():
+    pts = [(0, 0), (2, 0), (2, 2), (0, 2)]
+    ply = Polygon(pts)
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for seg in ply.segments:
+        a, b = seg[0], seg[1]
+        ax.plot([a.x, b.x], [a.y, b.y], color='w')
+
+    pts = [(0.25, 0), (2, 0), (1, 2), (0.7, 2), (0.5, 1), (0, 1)]
+    ply = Polygon(pts)
+
+    for seg in ply.segments:
+        a, b = seg[0], seg[1]
+        ax.plot([a.x, b.x], [a.y, b.y], color='k')
+
+    c = ply.centroid()
+    ax.scatter(c.x, c.y, color='y')
+
+    d = -0.1
+    print(ply.angles)
+
+    new_ply = Polygon(ply.offset(d))
+    for seg in new_ply.segments:
+        a, b = seg[0], seg[1]
+        ax.plot([a.x, b.x], [a.y, b.y], color='r')
+
+    plt.show()
+
+
 if __name__ == '__main__':
     # test_polygon_centroid()
     # test_polygon_divide()
-    test_polygon()
+    # test_polygon()
+
+    # test_angle()
+
+    test_offset()
