@@ -83,12 +83,18 @@ class Polygon:
     def angles(self):
         angles = []
         n = len(self.points)
+        # print(n, self.points)
         for i in range(n):
             p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
             a, b, c = p1 - p0, p2 - p0, p1 - p2
+            tmp = (a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b)/2
             # print(abs(a), abs(b))
-            # print((a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b))
-            angle = math.acos((a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b)/2)
+            # print(tmp)
+            if tmp > 1: tmp -= EPS
+            elif tmp < -1: tmp += EPS
+            # print(tmp, a, b, c)
+
+            angle = math.acos(tmp)
             if b.cross(a) < 0:
                 angle = math.pi * 2 - angle
             angles.append(angle)
@@ -136,6 +142,28 @@ class Polygon:
         for tri in self.triangles:
             self.__center += tri.area() * tri.centroid
         return self.__center / self.area()
+
+    def remove_inline_points(self, eps=1e-6):
+        if len(self.points) <= 3:
+            return self.points
+        pts = []
+        n = len(self.points)
+        l = self.points[-1]
+        for i in range(n):
+            if i == n-1 and len(pts) > 0:
+                m, r = self.points[i], pts[0]
+            else:
+                m, r = self.points[i], self.points[(i+1)%n]
+            if abs(r-m) < eps:
+                # print('r-m')
+                continue
+            if abs((l-m).cross(r-m)) < eps:
+                # print('cross')
+                continue
+            pts.append(m)
+            l = m
+        self.points = pts
+        return pts
 
     def earcut(self):
         """ Reference
@@ -232,7 +260,7 @@ class Polygon:
                 r = -r
             d = -(p+q).normalized() * r
             pts.append(p0 + d)
-        return pts
+        return Polygon(pts)
 
 
 
@@ -271,7 +299,7 @@ def test_polygon_divide():
     pts = [(0, 0), (1, 0), (1, 2), (0, 1)]
     ply = Polygon(pts)
 
-    print(ply.length)
+    # print(ply.length)
     N = 20
     # divs = ply.divide_by_distance(ply.length/N)
     divs = ply.divide_by_ray(N)
