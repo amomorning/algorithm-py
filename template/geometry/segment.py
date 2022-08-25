@@ -101,7 +101,7 @@ class Segment:
 
     def divide_by_num(self, num):
         distance = self.length / num
-        return self.divide_by_distance(distance-EPS)
+        return self.divide_by_distance(distance - EPS)
 
     def distance(self, rhs):
         if type(rhs) == Point:
@@ -114,7 +114,7 @@ class Segment:
                 return abs(u.cross(v)) / abs(u)
 
         if type(rhs) == Segment:
-            if self.intersection(rhs) != None:
+            if self.intersection(rhs) is not None:
                 return 0
             ret = min(self.distance(rhs.a), self.distance(rhs.b))
             ret = min(ret, min(rhs.distance(self.a), rhs.distance(self.b)))

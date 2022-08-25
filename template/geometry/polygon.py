@@ -87,11 +87,13 @@ class Polygon:
         for i in range(n):
             p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
             a, b, c = p1 - p0, p2 - p0, p1 - p2
-            tmp = (a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b)/2
+            tmp = (a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b) / 2
             # print(abs(a), abs(b))
             # print(tmp)
-            if tmp > 1: tmp -= EPS
-            elif tmp < -1: tmp += EPS
+            if tmp > 1:
+                tmp -= EPS
+            elif tmp < -1:
+                tmp += EPS
             # print(tmp, a, b, c)
 
             angle = math.acos(tmp)
@@ -150,14 +152,14 @@ class Polygon:
         n = len(self.points)
         l = self.points[-1]
         for i in range(n):
-            if i == n-1 and len(pts) > 0:
+            if i == n - 1 and len(pts) > 0:
                 m, r = self.points[i], pts[0]
             else:
-                m, r = self.points[i], self.points[(i+1)%n]
-            if abs(r-m) < eps:
+                m, r = self.points[i], self.points[(i + 1) % n]
+            if abs(r - m) < eps:
                 # print('r-m')
                 continue
-            if abs((l-m).cross(r-m)) < eps:
+            if abs((l - m).cross(r - m)) < eps:
                 # print('cross')
                 continue
             pts.append(m)
@@ -253,16 +255,14 @@ class Polygon:
         pts = []
         for i in range(n):
             p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
-            p, q = (p1-p0)/abs(p1-p0), (p2-p0)/abs(p2-p0)
+            p, q = (p1 - p0) / abs(p1 - p0), (p2 - p0) / abs(p2 - p0)
 
-            r = distance / math.sin(self.angles[i]/2)
+            r = distance / math.sin(self.angles[i] / 2)
             if q.cross(p) < 0:
                 r = -r
-            d = -(p+q).normalized() * r
+            d = -(p + q).normalized() * r
             pts.append(p0 + d)
         return Polygon(pts)
-
-
 
 
 def test_polygon_centroid():
@@ -376,6 +376,7 @@ def test_angle():
     ply = Polygon(pts)
     print(ply.angles)
     print(math.pi / 2)
+
 
 def test_offset():
     pts = [(0, 0), (2, 0), (2, 2), (0, 2)]
