@@ -155,5 +155,33 @@ def test_divide():
     plt.show()
 
 
+def test_segments():
+    # print(a.rotate(math.pi/3))
+    l = Segment(Point(0, 0), Point(3, 3))
+    check(operator.eq, l.lerp(0.3), Point(0.9, 0.9))
+    check(operator.eq, l.intersection(Segment(Point(1, 0), Point(0, 1))), Point(0.5, 0.5))
+    # (3, 8)
+
+    check(operator.eq, Point(1, 2, 3).select((0, 2)), Point(1, 3))
+
+    l = Segment(Point(0, 0, 0), Point(2, 4, 6))
+    r = Segment(Point(5, 0, 0), Point(-3, 4, 6))
+    r_ = Segment(Point(5, 0, 0), Point(2, 4, 6))
+    check(operator.eq, l.intersection_3d(r), Point(1, 2, 3))
+    # >>>: Point(1.0, 2.0, 3.0) eq Point(1, 2, 3)
+    check(operator.eq, l.intersection_3d(r_), Point(2, 4, 6))
+    # >>>: None eq None
+
+    l = Segment(Point(0, 0, 0), Point(3, 3, 0))
+    check(operator.eq, l.distance(Point(1, 0, 0)), math.sqrt(2) * 0.5)
+
+    check(operator.eq, l.project_point(Point(-1, 0, 0)), Point(-0.5, -0.5, 0))
+
+    p = plane.Plane(Point(0, 0, 0), Point(0, 1, 0))
+    debug(p.project_segment(Segment(Point(2, 1, 0), Point(4, 0, 5))))
+
+    check(operator.eq, l.distance(r), 5.0 / math.sqrt(6))
+
+
 if __name__ == '__main__':
     test_divide()

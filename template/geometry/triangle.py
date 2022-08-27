@@ -65,7 +65,7 @@ class Triangle:
         a = self.b - self.c  # p2-p3
         b = self.c - self.a  # p3-p1
         c = self.a - self.b  # p1-p2
-        r = abs(a) * abs(b) * abs(c) / (abs(b.cross(a) + EPS) * 2)
+        r = abs(a) * abs(b) * abs(c) / abs(b.cross(a) * 2)
 
         tmp = - c.cross(a) ** 2 * 2
         alpha = a ** 2 * c.dot(b)
@@ -131,3 +131,36 @@ class Triangle:
                 y = random.uniform(mn[1], mx[1])
             ret.append(Point(x, y))
         return ret
+
+
+def test_triangle():
+    tri = Triangle((0, 0, 0), (1, 1.5, 2), (0, 1, 1))
+
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as pat
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111, projection='3d')
+
+    for i in range(3):
+        a, b = tri[i], tri[(i + 1) % 3]
+        ax.plot([a.x, b.x], [a.y, b.y], [a.z, b.z], c='k', zorder=-1)
+        ax.scatter(a.x, a.y, a.z, c='r')
+
+    c = tri.centroid
+    ax.scatter(c.x, c.y, c.z, c='b')
+    # ax.text(c.x, c.y, 'centroid', c='b')
+
+    c, r = tri.incircle()
+    ax.scatter(c.x, c.y, c.z, c='g')
+    # ax.text(c.x, c.y, 'incenter', c='g')
+    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='g', zorder=-9))
+
+    c, r = tri.circumcircle()
+    ax.scatter(c.x, c.y, c.z, c='y')
+    # ax.text(c.x, c.y, 'circumcenter', c='y')
+    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='y', zorder=-10))
+    plt.show()
+
+
+if __name__ == '__main__':
+    test_triangle()

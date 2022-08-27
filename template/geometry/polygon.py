@@ -411,6 +411,91 @@ def test_offset():
     plt.show()
 
 
+def test_earcut():
+    n = int(input())
+    pts = []
+    for i in range(n):
+        x, y = map(float, input().split())
+        pts.append((x, y))
+    ply = Polygon(*pts)
+    print(ply.earcut())
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for i, p in enumerate(ply.points):
+        ax.text(p.x, p.y, str(i), c='r')
+
+    for tri in ply.triangles:
+        a, b, c = tri.a, tri.b, tri.c
+        ax.plot([a.x, b.x, c.x, a.x], [a.y, b.y, c.y, a.y], c='b')
+    # for seg in ply.segments:
+    #     a, b = seg.a, seg.b
+    #     ax.plot([a.x, b.x], [a.y, b.y], c='k')
+    debug(', '.join(map(str, ply.points)))
+    plt.show()
+
+
+def test_polygon():
+    tri = Triangle((10, 10), (7, 3), (3, 7))
+    check(operator.eq, tri.inside_point(Point(0, 0)), False)
+
+    tri3d = Triangle((10, 10, 0), (7, 3, 0), (3, 7, 0))
+    check(operator.eq, tri3d.inside_point(Point(5, 5, 0)), True)
+
+    ply = Polygon((0, 0), (1, 0), (2, 0), (2, 1), (0, 1))
+
+    debug(ply)
+    debug(isinstance(ply, Polygon))
+    debug(ply.is_convex)
+    debug(ply.is_convex)
+
+    print(ply.earcut())
+    ply = Polygon((1, 0), (6, 1), (4, 3), (3, 2), (2, 4), (0, 5))
+    print(ply.earcut())
+
+    import random, timeit
+
+    ply = Polygon((2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1))
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+
+    for i, p in enumerate(ply.points):
+        ax.text(p.x, p.y, str(i), c='r')
+
+    for tri in ply.triangles:
+        a, b, c = tri.a, tri.b, tri.c
+        ax.plot([a.x, b.x, c.x, a.x], [a.y, b.y, c.y, a.y], c='b')
+    for seg in ply.segments:
+        a, b = seg.a, seg.b
+        ax.plot([a.x, b.x], [a.y, b.y], c='k')
+
+    print(len(ply.points))
+    for x, y in ply.points:
+        print(x, y)
+    plt.show()
+
+
+def gen_polygon(n):
+    cur = 0
+    res = []
+    for _ in range(n - 1):
+        len = random.random()
+        angle = min(random.random() * math.pi * 3 / n, random.random() * (math.pi * 2 - cur))
+        angle += math.pi / 10 / n
+        cur += angle
+        res.append((len * math.cos(cur), len * math.sin(cur)))
+
+    len = random.random()
+    angle = math.pi * 2
+    res.append((len * math.cos(angle), len * math.sin(angle)))
+
+    return res
+
+
 if __name__ == '__main__':
     # test_polygon_centroid()
     # test_polygon_divide()

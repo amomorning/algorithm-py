@@ -1,4 +1,35 @@
-import bisect, math
+import collections, math, bisect, heapq, random, functools, itertools, copy, typing, operator
+import platform;
+
+LOCAL = (platform.uname().node == 'AMO')
+
+
+def debug(*args):
+    if LOCAL:
+        print('\033[92m', end='')
+        printf(*args)
+        print('\033[0m', end='')
+
+
+def printf(*args):
+    if LOCAL:
+        print('>>>: ', end='')
+    for arg in args:
+        if isinstance(arg, typing.Iterable) and \
+                not isinstance(arg, str) and \
+                not isinstance(arg, dict):
+            print(' '.join(map(str, arg)), end=' ')
+        else:
+            print(arg, end=' ')
+    print()
+
+
+def check(op, lhs, rhs=None):
+    if not op(lhs, rhs):
+        debug('Error: ', lhs, 'not', op.__name__, rhs)
+    else:
+        printf(lhs, op.__name__, rhs)
+
 
 EPS = 1e-6
 INF = 1e100
@@ -287,3 +318,62 @@ class Point:
             ret.append(tot)
 
         return Point(ret)
+
+
+def test_points():
+    check(operator.lt, Point(1, 2), Point(1, 2))
+    check(operator.le, Point(1, 2), Point(1, 2))
+
+    # 按 y 排序
+    a = [Point(3, 4), Point(1, 2), Point(3, 5), Point(2, 7)]
+    a = sorted(a, key=lambda p: p[1])
+    debug('Sorted by Y:', a)
+
+    a = sorted(a, key=functools.cmp_to_key(polar_cmp), reverse=True)
+    debug('sorted by Polar:', a)
+
+    check(operator.eq, sum(a, start=Point(0, 0)), Point(9, 18))
+
+    a = Point(1, 2)
+    b = Point(0, 4)
+
+    check(operator.eq, a.proj(b), Point(0, 2))
+    debug(a.rotate(0.1))
+
+    a = Point(1, 2, 3)
+    check(operator.eq, a.rotate_by_quaternion((1, 1, 1), 0.5), a.rotate_by((1, 1, 1), 0.5))
+
+    a = Point(1, 2, 3, 1)
+    check(operator.eq, Point(2, 3, 4, 1), a.apply_matrix([[1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 1], [0, 0, 0, 1]]))
+
+    # a = Point(1)
+
+
+def test_inside_aabb():
+    n = 1000
+    pts = [Point(random.randint(0, 100), random.randint(0, 100)) for _ in range(n)]
+    print(' '.join(map(str, pts)))
+    xs = sorted([(pts[i].x, i) for i in range(n)])
+    ys = sorted([(pts[i].y, i) for i in range(n)])
+    res = find_points_in_aabb(xs, ys, [[20, 20], [40, 60]], False)
+    print(res)
+
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(1, 1, 1)
+    inside = [[], []]
+    outside = [[], []]
+    for i in range(n):
+        if i in res:
+            inside[0].append(pts[i].x)
+            inside[1].append(pts[i].y)
+        else:
+            outside[0].append(pts[i].x)
+            outside[1].append(pts[i].y)
+    ax.scatter(inside[0], inside[1], c='r')
+    ax.scatter(outside[0], outside[1], c='k')
+    plt.show()
+
+
+if __name__ == '__main__':
+    test_inside_aabb()
