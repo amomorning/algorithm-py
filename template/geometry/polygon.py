@@ -74,7 +74,7 @@ class Polygon:
             return self.__convex
 
         self.__convex = True
-        for p0, p1, p2 in zip(self.points, self.points[1:], self.points[2:]):
+        for p0, p1, p2 in zip(self.points, self.points[1:]+self.points[:1], self.points[2:]+self.points[:2]):
             if (p1 - p0).cross(p2 - p0) < 0:
                 self.__convex = False
         return self.__convex
@@ -82,10 +82,7 @@ class Polygon:
     @property
     def angles(self):
         angles = []
-        n = len(self.points)
-        # print(n, self.points)
-        for i in range(n):
-            p0, p1, p2 = self.points[i], self.points[(i - 1) % n], self.points[(i + 1) % n]
+        for p1, p0, p2 in zip(self.points[-1:]+self.points[:-1], self.points, self.points[1:]+self.points[:1]):
             a, b, c = p1 - p0, p2 - p0, p1 - p2
             tmp = (a ** 2 + b ** 2 - c ** 2) / abs(a) / abs(b) / 2
             # print(abs(a), abs(b))
@@ -104,9 +101,7 @@ class Polygon:
 
     @property
     def segments(self):
-        segs = [Segment(p0, p1) for p0, p1 in zip(self.points, self.points[1:])]
-        segs.append(Segment(self.points[-1], self.points[0]))
-        return segs
+        return [Segment(p0, p1) for p0, p1 in zip(self.points, self.points[1:]+self.points[:1])]
 
     @property
     def triangles(self):
@@ -149,18 +144,11 @@ class Polygon:
         if len(self.points) <= 3:
             return self.points
         pts = []
-        n = len(self.points)
         l = self.points[-1]
-        for i in range(n):
-            if i == n - 1 and len(pts) > 0:
-                m, r = self.points[i], pts[0]
-            else:
-                m, r = self.points[i], self.points[(i + 1) % n]
+        for m, r in zip(self.points, self.points[1:]+self.points[:1]):
             if abs(r - m) < eps:
-                # print('r-m')
                 continue
             if abs((l - m).cross(r - m)) < eps:
-                # print('cross')
                 continue
             pts.append(m)
             l = m
