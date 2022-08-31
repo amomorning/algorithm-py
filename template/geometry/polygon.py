@@ -77,6 +77,7 @@ class Polygon:
         for p0, p1, p2 in zip(self.points, self.points[1:]+self.points[:1], self.points[2:]+self.points[:2]):
             if (p1 - p0).cross(p2 - p0) < 0:
                 self.__convex = False
+                return self.__convex
         return self.__convex
 
     @property
