@@ -1,6 +1,7 @@
 from point import *
 from segment import Segment
 from triangle import Triangle
+import convexhull
 
 import collections, math, bisect, heapq, random, functools, itertools, operator, copy, typing
 import platform;
@@ -253,6 +254,37 @@ class Polygon:
             pts.append(p0 + d)
         return Polygon(pts)
 
+    def is_rectangular(self):
+        for angle in self.angles:
+            if abs(angle - math.pi / 2) > 0.01:
+                return False
+        return True
+
+    def rectangular(self):
+        assert self.is_rectangular()
+        length = set()
+        for seg in self.segments:
+            length.add(int((seg.length + 5) // 10 * 10))
+        length = list(length)
+        if len(length) == 1:
+            return length[0], length[0]
+        assert len(length) == 2
+        return length
+
+    def minimal_bounding_rectangle(self):
+        convex = convexhull.ConvexHull(self.points)
+        _, pts = convex.smallest_enclosing_box()
+
+        length = set()
+        ply = Polygon(pts)
+        for seg in ply.segments:
+            length.add(int((seg.length + 5) // 10 * 10))
+        length = list(length)
+        if len(length) == 1:
+            return length[0], length[0]
+        assert len(length) == 2
+        return length
+
 
 def test_polygon_centroid():
     # pts = [(2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1)]
@@ -280,7 +312,7 @@ def test_polygon_centroid():
     b = ply.centroid()
     ax.scatter(b[0], b[1], c='y')
     ax.text(b[0], b[1], 'centroid', c='y')
-
+    plt.savefig('./imgs/polygon_centroid.png')
     plt.show()
 
 
@@ -290,8 +322,8 @@ def test_polygon_divide():
 
     # print(ply.length)
     N = 20
-    # divs = ply.divide_by_distance(ply.length/N)
-    divs = ply.divide_by_ray(N)
+    divs = ply.divide_by_distance(ply.length/N)
+    # divs = ply.divide_by_ray(N)
 
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(10, 10))
@@ -304,7 +336,7 @@ def test_polygon_divide():
     for i in range(N):
         angle = 2 * i * math.pi / N
         x, y = r * math.cos(angle), r * math.sin(angle)
-        ax.plot([c.x, c.x + x], [c.y, c.y + y], c='r')
+        ax.plot([c.x, c.x + x], [c.y, c.y + y], c='w', zorder=-10)
 
     for seg in ply.segments:
         a, b = seg.a, seg.b
@@ -316,6 +348,7 @@ def test_polygon_divide():
 
     ax.scatter([p.x for p in divs], [p.y for p in divs], c='b', zorder=10)
     plt.show()
+    # plt.savefig('./imgs/polygon_divide_by_distance.png')
 
 
 def test_polygon():
@@ -486,10 +519,10 @@ def gen_polygon(n):
 
 
 if __name__ == '__main__':
-    # test_polygon_centroid()
+    test_polygon_centroid()
     # test_polygon_divide()
     # test_polygon()
 
     # test_angle()
 
-    test_offset()
+    # test_offset()

@@ -1,7 +1,7 @@
 import random
 from point import *
-from polygon import Polygon
 from segment import Segment
+import polygon
 
 
 class ConvexHull:
@@ -31,7 +31,7 @@ class ConvexHull:
             k += 1
 
         self.points = convex[:min(n, k - 1)]
-        self.polygon = Polygon(self.points)
+        self.polygon = polygon.Polygon(self.points)
 
     def diameter(self, squared=False):
         n = len(self.points)
@@ -119,7 +119,9 @@ def test_convex():
         ax.plot([a.x, b.x], [a.y, b.y], c='k')
     ax.scatter([p[0] for p in pts], [p[1] for p in pts], c='r')
 
-    plt.show()
+    # plt.show()
+    plt.savefig('./imgs/polygon_bounding_box.png')
+    
 
 
 if __name__ == '__main__':

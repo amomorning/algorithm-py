@@ -134,33 +134,50 @@ class Triangle:
 
 
 def test_triangle():
-    tri = Triangle((0, 0, 0), (1, 1.5, 2), (0, 1, 1))
+    tri = Triangle((0, 0), (1, 1.5), (0, 1))
 
     import matplotlib.pyplot as plt
     import matplotlib.patches as pat
     fig = plt.figure(figsize=(10, 10))
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111)
 
     for i in range(3):
         a, b = tri[i], tri[(i + 1) % 3]
-        ax.plot([a.x, b.x], [a.y, b.y], [a.z, b.z], c='k', zorder=-1)
-        ax.scatter(a.x, a.y, a.z, c='r')
+        ax.plot([a.x, b.x], [a.y, b.y], c='k', zorder=-1)
+        ax.scatter(a.x, a.y, c='r')
 
     c = tri.centroid
-    ax.scatter(c.x, c.y, c.z, c='b')
-    # ax.text(c.x, c.y, 'centroid', c='b')
+    ax.scatter(c.x, c.y, c='b')
+    ax.text(c.x, c.y, 'centroid', c='b')
 
     c, r = tri.incircle()
-    ax.scatter(c.x, c.y, c.z, c='g')
-    # ax.text(c.x, c.y, 'incenter', c='g')
-    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='g', zorder=-9))
+    ax.scatter(c.x, c.y, c='g')
+    ax.text(c.x, c.y, 'incenter', c='g')
+    ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='g', zorder=-9))
 
     c, r = tri.circumcircle()
-    ax.scatter(c.x, c.y, c.z, c='y')
-    # ax.text(c.x, c.y, 'circumcenter', c='y')
-    # ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='y', zorder=-10))
-    plt.show()
+    ax.scatter(c.x, c.y, c='y')
+    ax.text(c.x, c.y, 'circumcenter', c='y')
+    ax.add_patch(pat.Circle((c.x, c.y), r, facecolor='w', edgecolor='y', zorder=-10))
+    # plt.show()
+    plt.savefig('./imgs/triangle_circles.png')
 
+def test_sample():
+    tri = Triangle((0, 0), (1, 1.5), (0, 1))
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as pat
+    fig = plt.figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+    for i in range(3):
+        a, b = tri[i], tri[(i + 1) % 3]
+        ax.plot([a.x, b.x], [a.y, b.y], c='k', zorder=-1)
+        ax.scatter(a.x, a.y, c='r')
+
+    pts = tri.uniform_sample(100)
+    ax.scatter([p.x for p in pts], [p.y for p in pts], color='r')
+    plt.show()
+ 
 
 if __name__ == '__main__':
-    test_triangle()
+    # test_triangle()
+    test_sample()
