@@ -28,7 +28,7 @@ Algorithm template for online contests, available on
     - Exgcd and Chinese remainder theorem
 - [graph](https://github.com/amomorning/algorithm-py/blob/master/template/graph.py)
     - dijkstra
-- [geometry](https://github.com/amomorning/algorithm-py/blob/master/template/geometry.py)
+- [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
     - Point (E^d)
         - quaternion
         - rotate
