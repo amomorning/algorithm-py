@@ -218,10 +218,10 @@ class DelaunayTrianglation:
 
 def test_delaunay():
     pts = set()
-    # for _ in range(200):
-    #     x = random.uniform(1, 100)
-    #     y = random.uniform(1, 100)
-    #     pts.add((x, y))
+    for _ in range(200):
+        x = random.uniform(1, 100)
+        y = random.uniform(1, 100)
+        pts.add((x, y))
     # print(len(pts))
     # for x, y in pts:
     #     print(x, y)
@@ -230,10 +230,10 @@ def test_delaunay():
 
     # print(list(pts))
 
-    n = int(input())
-    for i in range(n):
-        x, y = map(float, input().split())
-        pts.add((x, y))
+    # n = int(input())
+    # for i in range(n):
+    #     x, y = map(float, input().split())
+    #     pts.add((x, y))
 
     # do something
     pts = [Point(pt) for pt in pts]
@@ -254,7 +254,8 @@ def test_delaunay():
     for u, v in delaunay.edges:
         a, b = pts[u], pts[v]
         ax.plot([a.x, b.x], [a.y, b.y], color='k', zorder=-1)
-    plt.show()
+    plt.savefig('imgs/delaunay_fortune_2.png')
+    # plt.show()
 
 
 if __name__ == '__main__':

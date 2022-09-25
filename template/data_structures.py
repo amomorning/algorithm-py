@@ -78,36 +78,34 @@ class SparseTable:
         return self.select(self.u[i][l], self.u[i][r-(1<<i)+1])
 
 class UnionFind:
-    def __init__(self, x) -> None:
+    def __init__(self, x):
         self.uf = [-1] * x
  
     def find(self, x):
         r = x
         while self.uf[x] >= 0:
             x = self.uf[x]
- 
         while r != x:
             self.uf[r], r = x, self.uf[r]
         return x
  
+    def same(self, x, y):
+        return self.find(x) == self.find(y)
+
     def union(self, x, y):
         ux, uy = self.find(x), self.find(y)
         if ux == uy:
-            return
+            return False
         if self.uf[ux] >= self.uf[uy]:
             self.uf[uy] += self.uf[ux]
             self.uf[ux] = uy
         else:
             self.uf[ux] += self.uf[uy]
             self.uf[uy] = ux
-        return
+        return True
  
     def count(self):
-        ans = 0
-        for c in self.uf:
-            if c < 0:
-                ans += 1
-        return ans
+        return sum(f < 0 for f in self.uf)
  
     def valid(self):
         n = len(self.uf)
@@ -115,6 +113,17 @@ class UnionFind:
             if self.uf[c] == -n:
                 return True
         return False
+    
+    def roots(self):
+        return [i for i, f in enumerate(self.uf) if f < 0]
+
+    def groups(self):
+        n = len(self.uf)
+        ret = [[] for _ in range(n)]
+        for i in range(n):
+            f = self.find(i)
+            ret[f].append(i)
+        return ret
  
     def __print__(self):
         return self.uf
