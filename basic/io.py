@@ -173,8 +173,16 @@ def printf(*args):
             print(arg, end=' ')
     print()
 
-for _ in range(int(input())):
-    pass
+def solve(cas):
+    n, = inp()
+
+cas = 1
+cas = int(input())
+for _ in range(cas):
+    solve(cas)
+
+
+
 ################################
 ### 4. 交互题
 ################################
