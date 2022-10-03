@@ -31,7 +31,18 @@ Algorithm template for online contests, available on
   - Prime Table
   - Exgcd and Chinese remainder theorem
 - [graph](https://github.com/amomorning/algorithm-py/blob/master/template/graph.py)
-  - dijkstra
+  - BFS
+  - Colorize bipartite graph
+  - Topo sort
+  - Shortest path
+    - floyd $O(n^3)$
+    - Single source
+      - $O(n)$ on DAG
+      - dijkstra
+      - spfa
+  - Minimal spinning tree
+    - prim
+    - kruskal
 - [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
   - Point (E^d)
     - quaternion
