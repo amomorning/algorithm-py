@@ -88,14 +88,26 @@ Algorithm template for online contests, available on
 
 ## errors and other notes
 
+### known pypy errors
+
 - [pypy](https://github.com/amomorning/algorithm-py/blob/master/basic/use_pypy.py) notes
+
+### `sqrt` precision error
+
+``` py
+s = int(1e18)-2
+
+x = math.floor(math.sqrt(s))
+while (x+1) * (x+1) <= s: x += 1
+while x * x > s: x -= 1
+```
 
 ## tricks
 
-### Mock interactive problem
+### mock interactive problem
 <!-- TODO -->
 
-### Diff with brute force methods
+### diff with brute force methods
 
 ``` bash
 python gen.py > data.in && \ # generate random data
