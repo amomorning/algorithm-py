@@ -240,3 +240,15 @@ def linear_congruence(k1, m1, k2, m2):
     dx = m2 // d
     delta = x // dx - int(x % dx < 0)
     return m1 * (x - dx * delta) + k1, m1 // d * m2
+
+
+def count_coprime(primes, at, rest):
+    """ count number of coprime between [1, rest] with primes[at:]
+        notes: primes should be sorted in ascending order
+    """
+    if rest == 0: return 0
+    ret = rest
+    for i in range(at, len(primes)):
+        if primes[i] > rest: break
+        ret -= count_coprime(primes, i+1, rest // primes[i])
+    return ret
