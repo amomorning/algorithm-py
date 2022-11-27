@@ -154,8 +154,17 @@ sys.stdin, sys.stdout = IOWrapper(sys.stdin), IOWrapper(sys.stdout)
 
 import collections, math, bisect, heapq, random, functools, itertools, copy, typing
 import platform; LOCAL = (platform.uname().node == 'AMO')
+
+
 import sys; input = lambda: sys.stdin.readline().rstrip("\r\n")
 inp = lambda f=int: list(map(f, input().split()))
+sys.setrecursionlimit(10**6)
+
+def make_arr(*args):
+    def func(x):
+        if len(args) == 1: return [x for _ in range(args[0])]
+        return [make_arr(*args[1:])(x) for _ in range(args[0])]
+    return func
 
 def debug(*args):
     if LOCAL:
@@ -175,14 +184,9 @@ def printf(*args):
             print(arg, end=' ')
     print()
 
+
 def solve(cas):
     n, = inp()
-
-def make_arr(*args):
-    def func(x):
-        if len(args) == 1: return [x for _ in range(args[0])]
-        return [make_arr(*args[1:])(x) for _ in range(args[0])]
-    return func
 
 cas = 1
 cas = int(input())
