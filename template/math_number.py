@@ -252,3 +252,48 @@ def count_coprime(primes, at, rest):
         if primes[i] > rest: break
         ret -= count_coprime(primes, i+1, rest // primes[i])
     return ret
+
+
+class MillerRabin:
+    @classmethod
+    def pow_mod(self, a, b, mod):
+        ans = 1
+        while b:
+            if b & 1: ans = ans * a % mod
+            a = a * a % mod; b >>= 1
+        return ans
+
+    @classmethod
+    def is_prime(self, n:int):
+        if n <= 1: return False
+        return not self.miller_rabin(n)
+
+    @classmethod
+    def miller_rabin(self, n:int):
+        x, t = n-1, 0
+        while ~x & 1: 
+            x >>= 1 
+            t += 1
+
+        flag = True
+        if t >= 1 and x & 1:
+            cs = [2, 325, 9375, 28178, 450775, 9780504, 1795265022]
+            for a in cs:
+                if self.check_prime(a, n, x, t):
+                    flag = True
+                    break
+                flag = False
+        if not flag or n == 2: return False
+        return True
+
+    @classmethod
+    def check_prime(self, a, n, x, t):
+        ret = self.pow_mod(a, x, n)
+        last = ret
+        for i in range(1, t+1):
+            ret = self.pow_mod(ret, 2, n)
+            if ret == 1 and last != 1 and last != n-1:
+                return True
+            last = ret
+        if ret != 1: return True
+        return False
