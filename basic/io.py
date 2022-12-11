@@ -158,7 +158,6 @@ import platform; LOCAL = (platform.uname().node == 'AMO')
 
 import sys; input = lambda: sys.stdin.readline().rstrip("\r\n")
 inp = lambda f=int: list(map(f, input().split()))
-sys.setrecursionlimit(10**6)
 
 def make_arr(*args):
     def func(x):
@@ -184,6 +183,14 @@ def printf(*args):
             print(arg, end=' ')
     print()
 
+# avaliable on Google, AtCoder
+# sys.setrecursionlimit(10**6)
+# import numpy as np
+# import scipy
+
+# d4 = [(1,0),(0,1),(-1,0),(0,-1)]
+# d8 = [(1,0),(1,1),(0,1),(-1,1),(-1,0),(-1,-1),(0,-1),(1,-1)]
+# d6 = [(2,0),(1,1),(-1,1),(-2,0),(-1,-1),(1,-1)]  # hexagonal layout
 
 def solve(cas):
     n, = inp()
