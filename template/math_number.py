@@ -170,14 +170,16 @@ class PrimeTable:
     def is_prime(self, x:int):
         if x < 2: return False
         if x <= self.n: return self.min_div[x] == x
-        for i in range(2, int(math.sqrt(x))+1):
+        for p in self.primes:
+            if p * p > x: break
+            if x % p == 0: return False
+        for i in range(self.n+1, int(math.sqrt(x))+1):
             if x % i == 0: return False
         return True
     
     def prime_factorization(self, x:int):
         for p in self.primes:
-            if p * p > x: break
-            if x < len(self.min_div): break
+            if p * p > x or x <= self.n: break
             if x % p == 0:
                 cnt = 0
                 while x % p == 0: 
