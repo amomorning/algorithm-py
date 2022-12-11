@@ -146,26 +146,26 @@ class PrimeTable:
         self.min_div = [0] * (n+1)
         self.min_div[1] = 1
 
-        self.mu = [0] * (n+1)
-        self.phi = [0] * (n+1)
-        self.mu[1] = 1
-        self.phi[1] = 1
+        mu = [0] * (n+1)
+        phi = [0] * (n+1)
+        mu[1] = 1
+        phi[1] = 1
 
         for i in range(2, n+1):
             if not self.min_div[i]:
                 self.primes.append(i)
                 self.min_div[i] = i
-                self.mu[i] = -1
-                self.phi[i] = i-1
+                mu[i] = -1
+                phi[i] = i-1
             for p in self.primes:
                 if i * p > n: break
                 self.min_div[i*p] = p
                 if i % p == 0:
-                    self.phi[i*p] = self.phi[i] * p
+                    phi[i*p] = phi[i] * p
                     break
                 else:
-                    self.mu[i*p] = -self.mu[i]
-                    self.phi[i*p] = self.phi[i] * (p - 1)
+                    mu[i*p] = -mu[i]
+                    phi[i*p] = phi[i] * (p - 1)
 
     def is_prime(self, x:int):
         if x < 2: return False
@@ -175,7 +175,16 @@ class PrimeTable:
         return True
     
     def prime_factorization(self, x:int):
-        for p in range(2, int(math.sqrt(x))+1):
+        for p in self.primes:
+            if p * p > x: break
+            if x < len(self.min_div): break
+            if x % p == 0:
+                cnt = 0
+                while x % p == 0: 
+                    cnt += 1
+                    x //= p
+                yield p, cnt
+        for p in range(len(self.min_div), int(math.sqrt(x))+1):
             if x <= self.n: break
             if x % p == 0:
                 cnt = 0
