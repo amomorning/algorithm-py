@@ -1,11 +1,11 @@
-
-
+import math
 
 class SegmentTree:
-    def __init__(self, size, select=min):
+    def __init__(self, size, select=min, elem=math.inf):
         self.size = 1 << size.bit_length()
-        self.tree = [0] * (self.size << 1)
+        self.tree = [elem] * (self.size << 1)
         self.select = select
+        self.elem = elem
  
     def __getitem__(self, i):
         return self.tree[i + self.size]
@@ -17,8 +17,10 @@ class SegmentTree:
             x = self.select(self.tree[i0], self.tree[i0 ^ 1])
             i0 >>= 1
  
-    def range(self, i, j):
-        x = 0
+    def query(self, i, j):
+        """ query range [i, j)
+        """
+        x = self.elem
         l = i + self.size
         r = j + self.size
         while l < r:
@@ -30,7 +32,8 @@ class SegmentTree:
             l >>= 1
             r >>= 1
         return x
- 
+
+
 class Fenwick:
     def __init__(self, n):
         self.n = n
