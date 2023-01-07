@@ -43,6 +43,9 @@ Algorithm template for online contests, available on
   - Minimal spinning tree
     - prim
     - kruskal
+- [string](https://github.com/amomorning/algorithm-py/blob/master/template/string.py)
+  - 1d hash
+  - kmp
 - [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
   - Point (E^d)
     - quaternion
