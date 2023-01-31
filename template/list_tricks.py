@@ -51,3 +51,6 @@ arr = sorted(list(zip(a, range(len(a)))))
 ref = [a[i] for i in ids]
 k = 2
 print(get_kth(k, arr, ref))
+
+a = [1, 2, 4, 5]
+list(filter(lambda x: x%2 == 0, a))
