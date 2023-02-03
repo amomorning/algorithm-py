@@ -42,3 +42,20 @@ triple(12)
 
 list(map(triple, range(10)))
 
+
+# wraps
+# without wraps, the original name and doc string will lost
+def deco(func):
+    @ft.wraps(func) # try to omit this line
+    def wrapper(*args, **kwargs):
+        print('Calling decorated function')
+        return func(*args, **kwargs)
+    return wrapper
+
+@deco
+def example():
+    """Docs """
+    print('Calling example function')
+
+print(example.__name__)
+print(example.__doc__)
