@@ -594,4 +594,12 @@
         print(n)
 
 
+# 用 yield from 展平数组
+    from collections.abc import Iterable
+    def flatten_lists(lists):
+        for sublist in lists:
+            if isinstance(sublist, Iterable):
+                yield from flatten_lists(sublist)
+            else:
+                yield sublist
 
