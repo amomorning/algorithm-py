@@ -593,3 +593,23 @@ class SortedBlockList:
             i += 1
         if i == len(self.blocks_): return self.end_
         return self.blocks_[i].upper_bound(elem)
+
+class Stack(list):
+    def __init__(self, iterable=None):
+        if iterable is not None:
+            super().__init__(item for item in iterable)
+    
+    def push(self, *args):
+        if len(args) == 1:
+            self.append(args[0])
+        else:
+            self.append(args)
+    
+    def back(self):
+        return self[-1]
+    
+    def empty(self):
+        return len(self) == 0
+    
+    def length(self):
+        return len(self)
