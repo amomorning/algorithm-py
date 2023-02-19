@@ -35,17 +35,19 @@ Algorithm template for online contests, available on
   - Colorize bipartite graph
   - Topo sort
   - Shortest path
-    - floyd $O(n^3)$
+    - Floyd $O(n^3)$
     - Single source
       - $O(n)$ on DAG
-      - dijkstra
-      - spfa
+      - Dijkstra
+      - Spfa
   - Minimal spinning tree
-    - prim
-    - kruskal
+    - Prim
+    - Kruskal
 - [string](https://github.com/amomorning/algorithm-py/blob/master/template/string.py)
-  - 1d hash
-  - kmp
+  - 1d Hash
+  - KMP
+  - Manacher
+  - Longest Palindromic Prefix
 - [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
   - Point (E^d)
     - quaternion

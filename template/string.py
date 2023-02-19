@@ -55,6 +55,53 @@ class KMP:
                 ret.append(i)
         return ret
 
+class Manacher:
+    def __init__(self, s, bogus='#'):
+        self.s = [bogus]
+        for x in s:
+            self.s.append(x)
+            self.s.append(bogus)
+        self.bogus = bogus
+        self.solve()
+    
+    def solve(self):
+        n = len(self.s)
+        self.p = [0] * n
+        c, r = 0, 0
+        for i in range(n):
+            if r > i: self.p[i] = min(self.p[2*c-i], r-i)
+
+            while i+self.p[i]+1 < n and self.s[i+self.p[i]+1] == self.s[i-self.p[i]-1]: 
+                self.p[i] += 1
+
+            if i + self.p[i] > r:
+                c, r = i, i + self.p[i]
+
+        return self.p
+    
+    def result(self, join=False):
+        r = max(self.p)
+        c = self.p.index(r)
+        ret = [x for x in self.s[c-r:c+r] if x != self.bogus]
+        if join: ret = ''.join(map(str, ret))
+        return ret
+    
+    def max(self):
+        return max(self.p)
+
+
+def LongestPalindromicPrefix(s, bogus='#'):
+    tmp = s + bogus + s[::-1]
+    n = len(tmp)
+    lps = [0] * n
+    for i in range(1, n):
+        m = lps[i - 1]
+        while (m > 0 and tmp[m] != tmp[i]):
+            m = lps[m - 1]
+        if (tmp[i] == tmp[m]):
+            m += 1
+        lps[i] = m
+    return tmp[0 : lps[n - 1]]
 
 if __name__ == "__main__":
     s = 'aabcaabxaaa'
