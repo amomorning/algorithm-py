@@ -107,6 +107,19 @@ while (x+1) * (x+1) <= s: x += 1
 while x * x > s: x -= 1
 ```
 
+### complexity analysis
+
+#### Big O
+
+**Big O** notation is used to give an **upper bound** on the asymptotic growth
+
+- `O(1)`: constant
+- `O(log n)`: logarithmic
+- `O(n)`: linear
+- `O(n log n)`: log-linear
+- `O(n^k)`: polynomial, where `k` is a constant
+- `O(c^n)`: exponential, where `c` is a constant
+
 ## tricks
 
 ### mock interactive problem

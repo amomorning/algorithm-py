@@ -1,5 +1,3 @@
-import importlib
-import sys
 import resource
 
 mem_init = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
