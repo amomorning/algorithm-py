@@ -33,6 +33,111 @@ class SegmentTree:
             r >>= 1
         return x
 
+class LazySegmentTree:
+    def __init__(self, size):
+        self.size = size
+        self.tree = make_arr(self.size << 1)(Node)
+    
+    def build(self, handler):
+        self.traverse_all(handler)
+
+    def get_id(self, l, r):
+        return l + r | (l != r)
+    
+    def get_node(self, l, r):
+        return self.tree[self.get_id(l, r)]
+    
+
+    def traverse_all(self, handler, l=0, r=None):
+        if r == None: r = self.size - 1
+        if l == r:
+            handler(l, r, self.get_node(l, r))
+            return
+        m = (l+r) >> 1
+        lr, lm, mr = self.get_node(l, r), self.get_node(l, m), self.get_node(m+1, r)
+        self.down(l, m, r, lr, lm, mr)
+        self.traverse_all(handler, l, m)
+        self.traverse_all(handler, m+1, r)
+        self.up(l, m, r, lr, lm, mr)
+    
+    def traverse(self, handler, L, R, l=0, r=None):
+        if r == None: r = self.size - 1
+        if R < l or r < L or L > R: return
+        if L <= l and r <= R:
+            handler(l, r, self.get_node(l, r))
+            return
+        m = (l+r) >> 1
+        lr, lm, mr = self.get_node(l, r), self.get_node(l, m), self.get_node(m+1, r)
+        self.down(l, m, r, lr, lm, mr)
+        self.traverse(handler, L, R, l, m)
+        self.traverse(handler, L, R, m+1, r)
+        self.up(l, m, r, lr, lm, mr)
+        
+    def query_all(self):
+        return self.get_node(0, self.size-1).m
+
+    def query(self, L, R):
+        self.ret = Monoid(True)
+        def handler(l, r, u):
+            self.ret *= u.m
+        self.traverse(handler, L, R)
+        return self.ret
+
+    def up(self, l, m, r, u, lu, ru):
+        u.m = lu.m * ru.m
+
+    def update(self, L, R, dt):
+        def handler(l, r, u):
+            u.update(l, r, dt)
+        self.traverse(handler, L, R)
+    
+    def down(self, l, m, r, u, lu, ru):
+        if u.tag > 0:
+            # TODO how to pass value down
+            lu.update(l, m, u.tag)
+            ru.update(m+1, r, u.tag)
+            u.tag = 0
+    
+
+class Monoid:
+    def __init__(self, id_ = False, val = 0):
+        self.id_ = id_
+        # TODO how to set value
+        self.val = val
+    
+    def identity(self):
+        return Monoid(True)
+
+    def is_identity(self):
+        return self.id_
+
+    def __mul__(self, other):
+        if self.is_identity(): return other
+        if other.is_identity(): return self
+        # TODO how to merge two monoids
+        # example sum: Monoid(False, self.val + other.val)
+        # example min: Monoid(False, min(self, val, other.val))
+        return Monoid(False, self.val + other.val)
+    
+    def __repr__(self):
+        return f'{self.val}'
+    
+    def __str__(self):
+        return f'Monoid::{self.id_} {self.val}'
+    
+class Node:
+    def __init__(self):
+        self.m = Monoid()
+        self.tag = 0
+    
+    def update(self, l, r, dt):
+        # TODO how to update nodes
+        self.m.val += dt * (r-l+1)
+        self.tag += dt
+    
+    def __repr__(self):
+        return f'{self.m.val}'
+        
 
 class Fenwick:
     def __init__(self, n):

@@ -18,11 +18,13 @@ Algorithm template for online contests, available on
 
 - [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
   - Segment Tree
+  - Lazy Segment Tree (Monoid)
   - Fenwick Tree
   - Sparse Table
   - Union Find
   - Encoded Dict
   - Sorted List
+  - Sorted Blocks
 - [math and number theory](https://github.com/amomorning/algorithm-py/blob/master/template/math_number.py)
   - Quick Power
   - Binomial
