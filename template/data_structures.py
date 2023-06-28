@@ -33,6 +33,69 @@ class SegmentTree:
             r >>= 1
         return x
 
+class ZKWSegmentTree: 
+    def __init__(self, n): 
+        self.size =  1 << (n+2).bit_length() 
+        self.tree = [0] * (self.size*2)
+    def update(self, l, r, x):
+        tree, n = self.tree, self.size 
+        if l <= 0:
+            r += n+1
+            while r > 1 :
+                if r & 1:  tree[r ^ 1] += x
+                tmp = max(tree[r], tree[r ^ 1])
+                tree[r] -= tmp;tree[r ^ 1] -= tmp;tree[r >> 1] += tmp
+                r >>= 1 
+        elif r>=n-1:
+            l += n-1
+            while l > 1 :
+                if ~l & 1: tree[l ^ 1] += x
+                tmp = max(tree[l], tree[l ^ 1])
+                tree[l] -= tmp;tree[l ^ 1] -= tmp;tree[l >> 1] += tmp
+                l >>= 1
+        elif l == r:
+            tree, n = self.tree, self.size 
+            l += n 
+            tree[l] += x 
+            while l > 1 :
+                tmp = max(tree[l], tree[l ^ 1])
+                tree[l] -= tmp;tree[l ^ 1] -= tmp;tree[l >> 1] += tmp
+                l >>= 1
+        elif l < r:
+            l += n-1
+            r += n+1
+            while l ^ r ^ 1:
+                if ~l & 1: tree[l ^ 1] += x
+                if r & 1:  tree[r ^ 1] += x
+                tmp = max(tree[l], tree[l ^ 1])
+                tree[l] -= tmp;tree[l ^ 1] -= tmp;tree[l >> 1] += tmp
+                tmp = max(tree[r], tree[r ^ 1])
+                tree[r] -= tmp;tree[r ^ 1] -= tmp;tree[r >> 1] += tmp
+                l >>= 1;r >>= 1
+            while l > 1 :
+                tmp = max(tree[l], tree[l ^ 1])
+                tree[l] -= tmp;tree[l ^ 1] -= tmp;tree[l >> 1] += tmp
+                l >>= 1
+    
+    def query_all(self):
+        return self.query(0, self.size-1)
+
+    def query(self, l, r):
+        tree = self.tree
+        l += self.size 
+        r += self.size 
+        S = T = 0
+        if l ^ r : 
+            while l ^ r ^ 1:
+                S += tree[l] ; T += tree[r]
+                if ~l & 1 : S = max(S,tree[l^1])
+                if r & 1  : T = max(T,tree[r^1])
+                l >>= 1 ; r >>= 1 
+        S = max(tree[l]+S,tree[r]+T) 
+        while l > 1: 
+            l >>= 1 ; S += tree[l]
+        return S
+
 class LazySegmentTree:
     def __init__(self, size):
         self.size = size
