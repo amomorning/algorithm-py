@@ -19,6 +19,7 @@ Algorithm template for online contests, available on
 - [data structure](https://github.com/amomorning/algorithm-py/blob/master/template/data_structures.py)
   - Segment Tree
   - Lazy Segment Tree (Monoid)
+  - ZKW Segment Tree
   - Fenwick Tree
   - Sparse Table
   - Union Find
@@ -45,6 +46,8 @@ Algorithm template for online contests, available on
   - Minimal spinning tree
     - Prim
     - Kruskal
+  - MaxFlow
+    - Dinic
 - [string](https://github.com/amomorning/algorithm-py/blob/master/template/string.py)
   - 1d Hash
   - KMP

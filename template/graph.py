@@ -204,3 +204,85 @@ if __name__ == '__main__':
     spdag(G, 0)
 
         
+class Edge:
+    def __init__(self, v, next, cap):
+        self.v = v
+        self.next = next
+        self.cap = cap
+
+class MaxFlow:
+    s, t = -1, -1
+    def __init__(self, n):
+        self.n = n
+        self.g = []
+        self.head = [-1] * self.n
+
+    def add_edge(self, u, v, w):
+        self.g.append(Edge(v, self.head[u], w))
+        self.head[u] = len(self.g) - 1
+        self.g.append(Edge(u, self.head[v], 0))
+        self.head[v] = len(self.g) - 1
+
+    def dinic(self, s, t):
+        self.s = s
+        self.t = t
+        flow = 0
+        while self.bfs():
+            flow += self.dfs(s, math.inf)
+        return flow
+    
+    def get_cuts(self, s, t):
+        mark = [False] * self.n
+        def remark(u):
+            if mark[u]: return
+            mark[u] = True
+            i = self.head[u]
+            while i != -1:
+                if self.g[i].cap > 0: remark(self.g[i].v)
+                i = self.g[i].next
+        remark(s)
+        cuts = []
+        for u in range(self.n):
+            if not mark[u]: continue
+            i = self.head[u]
+            while i != -1:
+                if not mark[self.g[i].v]: 
+                    cuts.append((u, self.g[i].v, self.g[i^1].cap))
+                i = self.g[i].next
+        return cuts
+
+
+    def bfs(self):
+        q = collections.deque([self.t])
+        self.dis = [-1] * self.n
+        self.cur = [x for x in self.head]
+        self.dis[self.t] = self.n
+        while q:
+            u = q.popleft()
+            i = self.head[u]
+            while i != -1:
+                e = self.g[i]
+                if self.g[i^1].cap and self.dis[e.v] == -1:
+                    self.dis[e.v] = self.dis[u] - 1
+                    q.append(e.v)
+                
+                i = self.g[i].next
+        return self.dis[self.s] != -1
+    
+    def dfs(self, u, a):
+        if u == self.t: return a
+        flow, f = 0, 0
+        i = self.cur[u]
+        while i != -1:
+            e = self.g[i]
+            if e.cap and self.dis[e.v] > self.dis[u]:
+                f = self.dfs(e.v, min(a, e.cap))
+                flow += f
+                e.cap -= f
+                self.g[i^1].cap += f
+                a -= f
+                if a == 0: break
+            i = self.g[i].next
+        if flow == 0: self.dis[u] = -1
+        return flow
+    
