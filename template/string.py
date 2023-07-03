@@ -1,3 +1,6 @@
+gchr = lambda c, a='a': ord(c) - ord(a)
+gord = lambda c, a='a': chr(c + ord(a))
+
 class Hash:
     def __init__(self, s, seed=214131331, mod=9898798161):
         self.n = len(s)
@@ -102,6 +105,33 @@ def LongestPalindromicPrefix(s, bogus='#'):
             m += 1
         lps[i] = m
     return tmp[0 : lps[n - 1]]
+
+
+class Trie:
+    def __init__(self, n=100000):
+        self.n = n
+        self.cnt = 0
+        self.nxt = make_arr(n, 26)(lambda:0)
+        self.exist = [False] * n
+    
+    def insert(self, s):
+        p = 0
+        for c in s:
+            c = gchr(c)
+            if not self.nxt[p][c]:
+                self.cnt += 1
+                self.nxt[p][c] = self.cnt
+            p = self.nxt[p][c]
+        self.exist[p] = True
+    
+    def find(self, s):
+        p = 0
+        for c in s:
+            c = gchr(c)
+            if not self.nxt[p][c]:
+                return False
+            p = self.nxt[p][c]
+        return self.exist[p]
 
 if __name__ == "__main__":
     s = 'aabcaabxaaa'
