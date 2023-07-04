@@ -53,6 +53,8 @@ Algorithm template for online contests, available on
   - KMP
   - Manacher
   - Longest Palindromic Prefix
+  - Binary Trie(Min XOR)
+  - Trie
 - [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
   - Point (E^d)
     - quaternion

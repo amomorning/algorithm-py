@@ -133,6 +133,79 @@ class Trie:
             p = self.nxt[p][c]
         return self.exist[p]
 
+
+class BinaryTrie:
+    MAXBIT = 30
+    class Node:
+        def __init__(self, v):
+            self.l = None
+            self.r = None
+            self.v = v
+            self.cnt = 0
+            self.xor = 1<<BinaryTrie.MAXBIT
+    
+    def __init__(self):
+        self.root = self.Node(1<<self.MAXBIT)
+    
+    def insert(self, v):
+        u = self.root
+        stack = []
+        for b in range(self.MAXBIT)[::-1]:
+            stack.append(u)
+            if v & (1<<b):
+                if u.r is None:
+                    u.r = self.Node(v)
+                u = u.r
+            else:
+                if u.l is None:
+                    u.l = self.Node(v)
+                u = u.l
+        u.cnt = 1
+        u.v = v
+        u.xor = 1<<self.MAXBIT
+    
+        for u in stack[::-1]:
+            u.cnt = 0
+            if u.l and u.l.cnt:
+                u.cnt += u.l.cnt
+                u.xor = min(u.xor, u.l.xor)
+                u.v = u.l.v
+            if u.r and u.r.cnt:
+                u.cnt += u.r.cnt
+                u.xor = min(u.xor, u.r.xor)
+                u.v = u.r.v
+            if u.l and u.r and u.l.cnt and u.r.cnt:
+                u.xor = min(u.xor, u.l.v ^ u.r.v)
+
+    def erase(self, v):
+        u = self.root
+        stack = []
+        for b in range(self.MAXBIT)[::-1]:
+            stack.append(u)
+            if v & (1<<b):
+                u = u.r
+            else:
+                u = u.l
+        u.cnt = 0
+        u.v = -1
+        u.xor = 1<<self.MAXBIT
+
+        for u in stack[::-1]:
+            u.cnt = 0
+            u.xor = 1<<self.MAXBIT
+            if u.l and u.l.cnt:
+                u.cnt += u.l.cnt
+                u.xor = min(u.xor, u.l.xor)
+                u.v = u.l.v
+            if u.r and u.r.cnt:
+                u.cnt += u.r.cnt
+                u.xor = min(u.xor, u.r.xor)
+                u.v = u.r.v
+            if u.l and u.r and u.l.cnt and u.r.cnt:
+                u.xor = min(u.xor, u.l.v ^ u.r.v)
+            if u.cnt == 0:
+                u.v = -1
+
 if __name__ == "__main__":
     s = 'aabcaabxaaa'
     print(KMP(s).next)
