@@ -143,6 +143,167 @@ print('Ethan ordered a ' + p.get_name() + '\n')
 p = ChicagoStore.order_pizza('cheese')
 print('Joel ordered a ' + p.get_name() + '\n')
 
+
+# Abstract Factory Pattern
+class AbstactFactory(metaclass=ABCMeta):
+    @abstractmethod
+    def create_dough(self): pass
+
+    @abstractmethod
+    def create_sauce(self): pass
+
+    @abstractmethod
+    def create_cheese(self): pass
+
+# Facade Pattern
+# - provide a unified interface to a set of interfaces in a subsystem
+# - define a higher-level interface that makes the subsystem easier to use
+class HomeTheaterFacade:
+    def __init__(self, amp, tuner, dvd, cd, projector, lights, screen, popper):
+        self.amp = amp
+        self.tuner = tuner
+        self.dvd = dvd
+        self.cd = cd
+        self.projector = projector
+        self.lights = lights
+        self.screen = screen
+        self.popper = popper
+    
+    def watch_movie(self, movie):
+        print('Get ready to watch a movie...')
+        self.popper.on()
+        self.popper.pop()
+        self.lights.dim(10)
+        self.screen.down()
+        self.projector.on()
+        self.projector.wide_screen_mode()
+        self.amp.on()
+        self.amp.set_dvd(self.dvd)
+        self.amp.set_surround_sound()
+        self.amp.set_volume(5)
+        self.dvd.on()
+        self.dvd.play(movie)
+    
+    def end_movie(self):
+        print('Shutting movie theater down...')
+        self.popper.off()
+        self.lights.on()
+        self.screen.up()
+        self.projector.off()
+        self.amp.off()
+        self.dvd.stop()
+        self.dvd.eject()
+        self.dvd.off()
+
+# Proxy Pattern
+# - provide a surrogate or placeholder for another object to control access to it
+# - use an extra level of indirection to support distributed, controlled, or intelligent access
+import random
+import gc
+class AbstactSubject(metaclass=ABCMeta):
+    @abstractmethod
+    def sort(self): pass
+
+class RealSubject(AbstactSubject):
+    def __init__(self):
+        self.digits = []
+        for _ in range(10000000):
+            self.digits.append(random.random())
+    
+    def sort(self, reverse=False):
+        self.digits.sort()
+        if reverse:
+            self.digits.reverse()
+
+class Proxy(AbstactSubject):
+    reference_count = 0
+    def __init__(self):
+        if not getattr(self.__class__, 'cached_object', None):
+            self.__class__.cached_object = RealSubject()
+            print('Created new object')
+        else:
+            print('Using cached object')
+        self.__class__.reference_count += 1
+        print(f'Count of references = {self.__class__.reference_count}')
+    
+    def sort(self, reverse=False):
+        print('Called sort method of proxy')
+        self.__class__.cached_object.sort(reverse=reverse)
+    
+    def __del__(self):
+        self.__class__.reference_count -= 1
+
+        if self.__class__.reference_count == 0:
+            print('Number of reference_count is 0. Deleting cached object...')
+            del self.__class__.cached_object
+        print(f'Count of references = {self.__class__.reference_count}')
+
+proxy = Proxy()
+proxy2 = Proxy()
+proxy.sort(reverse=True)
+del proxy
+del proxy2
+gc.collect() # del not work in pypy3 interpreter without this line
+
+# Observer Pattern
+# - when one object changes state, all its dependents are notified and updated automatically
+import time, datetime
+class Subject():
+    def __init__(self):
+        self.observers = []
+        self.cur_time = None
+    
+    def register_observer(self, observer):
+        if observer in self.observers:
+            print(observer, 'already in subscribed observers')
+        else:
+            self.observers.append(observer)
+    
+    def unregister_observer(self, observer):
+        try:
+            self.observers.remove(observer)
+        except ValueError:
+            print('No such observer in subject')
+    
+    def notify_observers(self):
+        self.cur_time = time.time()
+        for observer in self.observers:
+            observer.notify(self.cur_time)
+
+class Observer(metaclass=ABCMeta):
+    @abstractmethod
+    def notify(self, unix_timestamp): pass
+
+class USATimeObserver(Observer):
+    def __init__(self, name):
+        self.name = name
+    
+    def notify(self, unix_timestamp):
+        time = datetime.datetime.fromtimestamp(int(unix_timestamp)).strftime('%Y-%m-%d %I:%M:%S%p')
+        print(f'Observer {self.name} says: {time}')
+
+class EUTimeObserver(Observer):
+    def __init__(self, name):
+        self.name = name
+    
+    def notify(self, unix_timestamp):
+        time = datetime.datetime.fromtimestamp(int(unix_timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+        print(f'Observer {self.name} says: {time}')
+
+
+subject = Subject()
+observer1 = USATimeObserver('USATimeObserver')
+subject.register_observer(observer1)
+subject.notify_observers()
+time.sleep(2)
+observer2 = EUTimeObserver('EUATimeObserver')
+subject.register_observer(observer2)
+subject.notify_observers()
+time.sleep(2)
+subject.unregister_observer(observer2)
+subject.notify_observers()
+
+
 # Model View Controller
 # popular in web development, such as web2py, Pyramid, Django
 # - Model: data access layer
@@ -150,8 +311,6 @@ print('Joel ordered a ' + p.get_name() + '\n')
 # - Controller: business logic layer
 # Benifits:
 # 1. modify the views without touching the model and business logic and vice versa
-
-
 
 class Quackable(metaclass=ABCMeta):
     @abstractmethod
