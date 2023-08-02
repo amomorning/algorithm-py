@@ -423,7 +423,7 @@ invoker.delete_file()
 invoker.undo_all()
 
 
-# Template Method
+# Template method pattern
 # allow subclasses to redefine certain steps of an algorithm without changing the algorithm's structure
 # - abstract class: define the algorithm's skeleton
 # - concrete class: implement the abstract class's abstract methods
