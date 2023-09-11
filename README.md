@@ -114,6 +114,139 @@ while (x+1) * (x+1) <= s: x += 1
 while x * x > s: x -= 1
 ```
 
+## Time complexity of python operations
+
+### list
+
+#### O(1)
+
+- Append
+- pop last
+- get item
+- set item
+- get length
+
+#### O(k)
+
+- get slice
+- extend(k)
+
+#### O(n)
+
+- copy
+- insert
+- pop(id)
+- x in list
+- del item
+- iteration
+- min, max, sum
+
+#### O(n log n)
+
+- sort
+
+### collections.deque
+
+#### O(1)
+
+- append
+- appendleft
+- pop
+- popleft
+
+#### O(k)
+
+- extend
+- extendleft
+- rotate
+
+#### O(n)
+
+- copy
+- remove
+
+
+### set
+
+#### O(1)
+
+- x in s
+
+#### O(len(s))
+
+- s-t
+- s^t
+
+#### O(len(t))
+
+- s.difference_update(t)
+- s.symmetric_difference_update(t)
+
+#### O(min(len(s), len(t)))
+
+- s&t
+
+#### O(len(s)+len(t))
+
+- s|t
+
+### dict
+
+#### O(1)
+
+- k in d
+- get item
+- set item
+- del item
+
+#### O(n)
+
+- copy
+- iteration
+
+### heapq
+
+#### O(logn)
+
+- heappush
+- heappop
+- heappushpop
+- heapreplace
+
+#### O(nlogk)
+
+- merge
+
+#### O(n)
+
+- heapify
+
+#### O(n+klog(n))
+
+- nsmallest
+- nlargest
+
+### bisect
+
+#### O(logn)
+
+- bisect
+- bisect_left
+- bisect_right
+
+#### O(n)
+
+- insort
+- insort_left
+- insort_right
+
+### References
+
+- [TimeComplexity - Python Wiki](https://wiki.python.org/moin/TimeComplexity#list)
+- [heapq — Heap queue algorithm — Python 3.10.6 documentation](https://docs.python.org/3/library/heapq.html#module-heapq)
+- [Python's heapq module](https://johnlekberg.com/blog/2020-11-01-stdlib-heapq.html)
+- [bisect — Array bisection algorithm — Python 3.10.6 documentation](https://docs.python.org/3/library/bisect.html)
+
 ### complexity analysis
 
 #### Big O
@@ -126,6 +259,8 @@ while x * x > s: x -= 1
 - `O(n log n)`: log-linear
 - `O(n^k)`: polynomial, where `k` is a constant
 - `O(c^n)`: exponential, where `c` is a constant
+
+
 
 ## tricks
 

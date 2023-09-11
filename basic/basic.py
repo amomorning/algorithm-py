@@ -23,6 +23,19 @@
     ## x的y次方
     2**4 # => 16
 
+    # float
+    x = 1123.5
+    x.as_integer_ratio() # => (2247, 2)
+
+    # integer
+    y = 123
+    y.numerator # => 123
+    y.denominator # => 1
+    y.bit_length() # => 7
+    
+# 复数
+    a = 1+2j + 2+3j
+    a.conjugate()
 
 # 进制和ASCII
 
@@ -135,7 +148,10 @@
     "{0} be nimble, {0} be quick, {0} jump over the {1}".format("Jack", "candle stick") #=> "Jack be nimble, Jack be quick, Jack jump over the candle stick"
 
     ## 如果不想数参数，可以用关键字
-    "{name} wants to eat {food}".format(name="Bob", food="lasagna") #=> "Bob wants to eat lasagna"
+    name, food = "Bob", "lasagna"
+    s = "{name} wants to eat {food}".format(name, food) #=> "Bob wants to eat lasagna"
+    ## 或者
+    f"{name} wants to eat {food}"  # => "Bob wants to eat lasagna"
 
 # MSIC.
     ##  None是一个对象
