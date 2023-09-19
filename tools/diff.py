@@ -19,6 +19,9 @@ def main():
 @click.option('--num-iterations', default=100)
 @click.option('--time-interval', default=0.0)
 def run(gen, binary, good, num_iterations, time_interval):
+    """ Usage:
+        ~/contests/algorithm-py/tools/diff.py run --gen ./gen.py --binary=./a.py --good=./a_brute.py
+    """
     for iteration in range(num_iterations):
         logging.info('iteration: {}'.format(iteration))
         with open('data.in', 'w') as f:
