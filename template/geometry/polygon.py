@@ -180,13 +180,15 @@ class Polygon:
             l, r = prev_[m], next_[m]
 
             tri = Triangle(p[l], p[m], p[r])
+            debug(tri.aabb)
             ids = find_points_in_aabb(xs, ys, tri.aabb, False) & refvex
+            debug(ids)
             is_ear = True
             for i in ids:
                 if i == l or i == r: continue
                 is_ear &= (not tri.inside_point(p[i]))
                 if not is_ear: break
-            # debug(l, m, r, is_ear)
+            debug(l, m, r, is_ear)
             if is_ear:
                 res.append((l, m, r))
                 vis[m] = 1
@@ -425,7 +427,7 @@ def test_offset():
     d = -0.1
     print(ply.angles)
 
-    new_ply = Polygon(ply.offset(d))
+    new_ply = Polygon(ply.offset(-d))
     for seg in new_ply.segments:
         a, b = seg[0], seg[1]
         ax.plot([a.x, b.x], [a.y, b.y], color='r')
@@ -519,10 +521,22 @@ def gen_polygon(n):
 
 
 if __name__ == '__main__':
-    test_polygon_centroid()
+    # test_polygon_centroid()
     # test_polygon_divide()
     # test_polygon()
+    # pts = [
+    # (3, 2), (4.5, 2), (2, 4.5), (2, 3),
+    # (-2, 3), (-2, 4.5), (-4.5, 2), (-3, 2),
+    # (-3, -2), (-4.5, -2), (-2, -4.5), (-2, -3),
+    # (2, -3), (2, -4.5), (4.5, -2), (3, -2)
+    # ]
+    # p = Polygon(pts)
+    # tri = p.earcut()
+
+    # import matplotlib.pyplot as plt
+    # plt.triplot([p[0] for p in pts], [p[1] for p in pts], tri)
+    # plt.show()
 
     # test_angle()
 
-    # test_offset()
+    test_offset()

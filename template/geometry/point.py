@@ -42,7 +42,7 @@ def polar_cmp(a, b):
     if cmp(a.y) * cmp(b.y) <= 0:
         if cmp(a.y) > 0 or cmp(b.y) > 0: return cmp(a.y - b.y)
         if cmp(a.y) == 0 and cmp(b.y) == 0: return cmp(a.x - b.x)
-    return cmp(a.cross(b))
+    return -cmp(a.cross(b))
 
 
 def find_points_in_aabb(xs, ys, aabb, boundary=True):
@@ -376,4 +376,7 @@ def test_inside_aabb():
 
 
 if __name__ == '__main__':
-    test_inside_aabb()
+    # test_inside_aabb()
+    p0 = Point([1, 2, 3])
+    p1 = Point([4, 5, 6])
+    print(p0.proj(p1))
