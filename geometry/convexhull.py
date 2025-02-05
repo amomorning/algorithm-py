@@ -1,4 +1,3 @@
-import random
 from point import *
 from segment import Segment
 import polygon

@@ -2,17 +2,25 @@
 
 Algorithm template for online contests, available on  
 
-- [Codeforces](https://codeforces.com/)(pypy 3.9.10)
-- [Atcoder](https://atcoder.jp/)(Python 3.8.2 | pypy 3.6.9)
+- [Codeforces](https://codeforces.com/)(pypy 3.10)
+- [Atcoder](https://atcoder.jp/)(CPython 3.11.4 | pypy 3.10)
 
 ## basic usage
 
 - [basic](https://github.com/amomorning/algorithm-py/blob/master/basic/basic.py)
 - [input and output](https://github.com/amomorning/algorithm-py/blob/master/basic/io.py)
 - [math and cmath](https://github.com/amomorning/algorithm-py/blob/master/basic/use_math.py)
+- [random](https://github.com/amomorning/algorithm-py/tree/master/basic/random)
+- [copy](https://github.com/amomorning/algorithm-py/blob/master/basic/use_copy.py)
 - [itertools](https://github.com/amomorning/algorithm-py/blob/master/basic/use_itertools.py)
+- [functools](https://github.com/amomorning/algorithm-py/blob/master/basic/use_functools.py)
 - [collections](https://github.com/amomorning/algorithm-py/blob/master/basic/use_collections.py)
 - [regular expressions](https://github.com/amomorning/algorithm-py/blob/master/basic/use_re.py)
+
+## useful modules
+
+- [numpy](https://github.com/amomorning/algorithm-py/blob/master/basic/use_numpy.py)
+- [networkx](https://github.com/amomorning/algorithm-py/blob/master/basic/use_networkx.py) 
 
 ## algorithm template
 
@@ -55,25 +63,34 @@ Algorithm template for online contests, available on
   - Longest Palindromic Prefix
   - Binary Trie(Min XOR)
   - Trie
-- [geometry](https://github.com/amomorning/algorithm-py/tree/master/template/geometry)
-  - Point (E^d)
+
+### tricks
+
+- [bit tricks](https://github.com/amomorning/algorithm-py/blob/master/template/bit_tricks.ipynb)
+  - BitSet
+- [list tricks](https://github.com/amomorning/algorithm-py/blob/master/template/list_tricks.py)
+
+## geometry
+
+- [geometry](https://github.com/amomorning/algorithm-py/tree/master/geometry)
+  - [Point (E^d)](https://github.com/amomorning/algorithm-py/tree/master/geometry/point.py)
     - quaternion
     - rotate
     - matrix (row major)
     - polar_cmp
     - find_points_in_aabb
-  - Segment
+  - [Segment]((https://github.com/amomorning/algorithm-py/tree/master/geometry/segment.py))
     - intersection
     - point on segment
     - projection of point
     - distance to point / segment
-  - Plane
+  - [Plane]((https://github.com/amomorning/algorithm-py/tree/master/geometry/plane.py))
     - projection of point / segment
-  - Matrix
+  - [Matrix](https://github.com/amomorning/algorithm-py/tree/master/geometry/matrix.py)
     - from translate
     - from rotate
     - from scale
-  - Triangle
+  - [Triangle](https://github.com/amomorning/algorithm-py/tree/master/geometry/triangle.py)
     - normal
     - area
     - bounding box
@@ -82,21 +99,17 @@ Algorithm template for online contests, available on
     - circumcircle (外心)
     - point in triangle
     - uniform sample in triangle(three kinds of algorithm)
-  - Polygon
+  - [Polygon](https://github.com/amomorning/algorithm-py/tree/master/geometry/polygon.py)
     - is convex or not
     - signed area / area
     - centriod (area based)
     - triangulation by earcut algorithm
     - point in polygon
-  - Convex Hull
+  - [Convex Hull](https://github.com/amomorning/algorithm-py/tree/master/geometry/convexhull.py)
     - 2d quick convex hull from point cloud
-  - Delaunay Trianglation
+  - [Delaunay Trianglation](https://github.com/amomorning/algorithm-py/tree/master/geometry/delaunay.py)
     - Fortune algorithm (o(n log n))
   - other
-
-- [bit tricks](https://github.com/amomorning/algorithm-py/blob/master/template/bit_tricks.ipynb)
-  - BitSet
-- [list tricks](https://github.com/amomorning/algorithm-py/blob/master/template/list_tricks.py)
 
 ## errors and other notes
 

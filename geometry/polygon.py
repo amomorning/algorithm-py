@@ -3,7 +3,7 @@ from segment import Segment
 from triangle import Triangle
 import convexhull
 
-import collections, math, bisect, heapq, random, functools, itertools, operator, copy, typing
+import math, random, operator, typing
 import platform;
 
 LOCAL = (platform.uname().node == 'AMO')
@@ -371,8 +371,6 @@ def test_polygon():
     ply = Polygon((1, 0), (6, 1), (4, 3), (3, 2), (2, 4), (0, 5))
     print(ply.earcut())
 
-    import random, timeit
-
     ply = Polygon((2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1))
 
     import matplotlib.pyplot as plt
@@ -478,8 +476,6 @@ def test_polygon():
     print(ply.earcut())
     ply = Polygon((1, 0), (6, 1), (4, 3), (3, 2), (2, 4), (0, 5))
     print(ply.earcut())
-
-    import random, timeit
 
     ply = Polygon((2, 0), (1, 2), (3, 2), (3, 0), (5, 2), (5, 0), (6, 4), (4, 2), (1, 4), (0, 1))
 
